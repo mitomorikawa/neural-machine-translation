@@ -74,10 +74,10 @@ python bahdanau_train.py
 ```
 
 Default configuration:
-- Hidden size: 128
+- Hidden size: 
 - Learning rate: 0.001
-- Batch size: 16
-- Epochs: 100
+- Batch size: 
+- Epochs: 
 - Optimizer: Adam
 - Loss function: CrossEntropyLoss
 
@@ -132,4 +132,5 @@ Trained models are saved in the `models/` directory with timestamps:
 - The model uses teacher forcing during training
 - Vocabulary includes special tokens: `<PAD>`, `<SOS>`, `<EOS>`, `<UNK>`
 - GPU acceleration is automatically used if available
+
 

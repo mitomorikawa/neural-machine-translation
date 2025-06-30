@@ -10,13 +10,14 @@ import library.nn_architectures as nn_architectures
 import library.preprocessor as preprocessor
 import torch
 
-encoder_path = "../models/bahdanau_encoder_20250625_185000_22"
-decoder_path = "../models/bahdanau_decoder_20250625_185000_22"
+encoder_path = "../models/bahdanau_encoder_20250628_122604_2"
+decoder_path = "../models/bahdanau_decoder_20250628_122604_2"
 src_language = "English"
 
 translator_class = translator.Translator(encoder_path, decoder_path)
-encoder = nn_architectures.EncoderRNN(9783, 128)
-decoder = nn_architectures.AttnDecoderRNN(128, 15532, 69)
+hidden_size = 1024
+encoder = nn_architectures.EncoderRNN(9783, hidden_size)
+decoder = nn_architectures.AttnDecoderRNN(hidden_size, 15532, 69)
 
 encoder, decoder = translator_class.load_models(encoder, decoder)
 src_vocab = translator_class.load_vocab("../data/eng_vocab.pkl")

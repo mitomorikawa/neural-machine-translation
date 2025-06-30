@@ -16,8 +16,9 @@ src_train = loader.load("../data/eng_train.pt", device=device)
 tgt_train = loader.load("../data/fra_train.pt", device=device)
 src_val = loader.load("../data/eng_val.pt", device=device)
 tgt_val = loader.load("../data/fra_val.pt", device=device)
-encoder = nn_architectures.EncoderRNN(9783, 128).to(device)
-decoder = nn_architectures.AttnDecoderRNN(128, 15532, 69).to(device)
+hidden_size = 1024
+encoder = nn_architectures.EncoderRNN(9783, hidden_size).to(device)
+decoder = nn_architectures.AttnDecoderRNN(hidden_size, 15532, 69).to(device)
 
 train_instance = trainer.Trainer(
     encoder=encoder,
@@ -27,6 +28,6 @@ train_instance = trainer.Trainer(
     n_epochs=100
 )
 
-train_dataloader = loader.create_dataloader(src_train, tgt_train, batch_size=16)
-val_dataloader = loader.create_dataloader(src_val, tgt_val, batch_size=16)
-train_instance.train(train_dataloader, val_dataloader)
+train_dataloader = loader.create_dataloader(src_train, tgt_train, batch_size=128)
+val_dataloader = loader.create_dataloader(src_val, tgt_val, batch_size=128)
+train_instance.train(train_dataloader, val_dataloader, encoder_name="bahdanau_encoder", decoder_name="bahdanau_decoder")

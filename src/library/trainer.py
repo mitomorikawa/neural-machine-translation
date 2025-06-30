@@ -82,7 +82,7 @@ class Trainer:
             decoder_optimizer.zero_grad()
 
             encoder_outputs, encoder_hidden = self.encoder(src_idx)
-            decoder_outputs, _, _ = self.decoder(encoder_outputs, encoder_hidden, tgt_idx)
+            decoder_outputs, _, _ = self.decoder(encoder_outputs, encoder_hidden, tgt_idx, greedy=True)
 
             loss = self.loss_fn(decoder_outputs.view(-1, decoder_outputs.size(-1)), tgt_idx.view(-1))
             loss.backward()
@@ -118,7 +118,7 @@ class Trainer:
             with torch.no_grad():
                 for src_idx, tgt_idx in val_dataloader:
                     encoder_outputs, encoder_hidden = self.encoder(src_idx)
-                    decoder_outputs, _, _ = self.decoder(encoder_outputs, encoder_hidden, tgt_idx)
+                    decoder_outputs, _, _ = self.decoder(encoder_outputs, encoder_hidden, tgt_idx, greedy=True)
 
                     loss = self.loss_fn(decoder_outputs.view(-1, decoder_outputs.size(-1)), tgt_idx.view(-1))
                     epoch_val_total_loss += loss.item()

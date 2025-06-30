@@ -63,7 +63,7 @@ class Translator:
 
         with torch.no_grad():
             encoder_outputs, encoder_hidden = encoder(src_idx)
-            decoder_outputs, _, _ = decoder(encoder_outputs, encoder_hidden)
+            decoder_outputs, _, _ = decoder(encoder_outputs, encoder_hidden, greedy=False, beam_width=5)
             _, topi = decoder_outputs.topk(1)
             translated_indices = topi.squeeze(1).tolist()
             decoded_words = []
