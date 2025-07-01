@@ -6,6 +6,11 @@ This module provides a validation class.
 
 from bleu import list_bleu
 from tqdm import tqdm
+import os
+import sys
+from contextlib import redirect_stdout, redirect_stderr
+import io
+
 class Validator:
     def __init__(self, encoder,decoder, translator, src_val, tgt_val, src_idx2word, tgt_idx2word):
         self.encoder = encoder  
@@ -29,15 +34,16 @@ class Validator:
         """
   
         total_bleu = 0.0
-        for src, tgt in tqdm(zip(self.src_val, self.tgt_val)):
+        for src, tgt in tqdm(zip(self.src_val, self.tgt_val), desc="Evaluating", total=len(self.src_val)):
             src = src.unsqueeze(0)
             tgt = tgt.unsqueeze(0)
             translated = self.translator.translate(src, self.encoder, self.decoder, self.tgt_idx2word)
             reference_words = [self.tgt_idx2word[idx] for idx in tgt[0].tolist() if idx not in [0, 1, 2]]  # Skip PAD, EOS, BOS tokens
             reference = ' '.join(reference_words)
 
-            bleu_score = list_bleu([[reference]], [translated])
-            print(f"Source: {src}, Translated: {translated}, Reference: {reference}, BLEU Score: {bleu_score:.4f}")
+            # Suppress BLEU calculation output
+            with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+                bleu_score = list_bleu([[reference]], [translated])
             total_bleu += bleu_score
         avg_bleu = total_bleu / len(self.src_val)
 

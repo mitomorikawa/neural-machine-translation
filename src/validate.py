@@ -2,14 +2,16 @@ import library.validator as validator
 import library.translator as translator
 import library.trainer as trainer
 import library.nn_architectures as nn_architectures
+import torch
 
 encoder_path = "../models/bahdanau_encoder_20250628_122604_2"
 decoder_path = "../models/bahdanau_decoder_20250628_122604_2"
 
 
 hidden_size = 1024
-encoder = nn_architectures.EncoderRNN(9783, hidden_size)
-decoder = nn_architectures.AttnDecoderRNN(hidden_size, 15532, 69)
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+encoder = nn_architectures.EncoderRNN(9783, hidden_size).to(device)
+decoder = nn_architectures.AttnDecoderRNN(hidden_size, 15532, 69).to(device)
 translator_instance = translator.Translator(encoder_path, decoder_path)
 encoder, decoder = translator_instance.load_models(encoder, decoder)
 
@@ -24,7 +26,6 @@ tgt_vocab_path = "../data/fra_vocab.pkl"
 
 src_vocab = translator_instance.load_vocab(src_vocab_path)
 tgt_vocab = translator_instance.load_vocab(tgt_vocab_path)
-print(f"tgt vocab keys: {tgt_vocab.keys()}")
 src_idx2word = src_vocab["idx2word"]
 tgt_idx2word = tgt_vocab["idx2word"]
 
@@ -37,5 +38,5 @@ validator_instance = validator.Validator(
     src_idx2word=src_idx2word,
     tgt_idx2word=tgt_idx2word
 )
-evaluate_val_set = validator_instance.evaluate_val_set()
+validator_instance.evaluate_val_set()
 translate_random_samples = validator_instance.translate_random_samples()
