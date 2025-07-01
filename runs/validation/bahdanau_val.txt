@@ -1,0 +1,11 @@
+Average BLEU score on validation set: 34.0562
+Source: he didn ' t get her joke ., Translated: il n ' a pas saisi sa blague .
+Source: tom wouldn ' t accept my apology ., Translated: tom n ' a pas accepté mes excuses .
+Source: could you spare me a few minutes ?, Translated: pourrais - tu me consacrer quelques minutes ?
+Source: you ' ve done well here ., Translated: vous avez fait bien ici .
+Source: i don ' t see what you two are so happy about ., Translated: je ne vois pas ce que vous êtes tous les deux si heureuses .
+Source: i ' ll never forgive you as long as i live ., Translated: je ne te pardonnerai jamais aussi longtemps que je vis .
+Source: i love weddings ., Translated: j ' adore les défis .
+Source: don ' t bother waking me up at 4 : 00 a . m . i don ' t plan to go fishing tomorrow ., Translated: ne me dérangez pas de me réveiller à quatre heures du matin . je ne prévois pas d ' aller pêcher demain .
+Source: the pharmacy isn ' t far from the hospital ., Translated: la pharmacie n ' est pas loin de l ' hôpital .
+Source: she hung the calendar on the wall ., Translated: elle a traversé le calendrier sur le mur .
