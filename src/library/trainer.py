@@ -16,7 +16,7 @@ class TensorLoader:
     This class is responsible for loading tensors from a pt file.
     """
 
-    def load(self, file_path: str, device: torch.device):
+    def load(self, file_path: str, device=torch.device("cuda" if torch.cuda.is_available() else "cpu")):
         """
         Loads a tensor from the specified file path
         

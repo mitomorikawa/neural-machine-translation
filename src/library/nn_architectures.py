@@ -140,12 +140,6 @@ class AttnDecoderRNN(nn.Module):
             
             return decoder_outputs, best_sequence['hidden'], attentions
             
-                
-                
-
-        
-
-
     def forward_step(self, input, hidden, encoder_outputs):
         embedded =  self.dropout(self.embedding(input))
         if embedded.dim() == 2: 
