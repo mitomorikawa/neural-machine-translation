@@ -10,8 +10,8 @@ decoder_path = "../models/bahdanau_decoder_20250628_122604_2"
 
 hidden_size = 1024
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-encoder = nn_architectures.EncoderRNN(9783, hidden_size).to(device)
-decoder = nn_architectures.AttnDecoderRNN(hidden_size, 15532, 69).to(device)
+encoder = nn_architectures.RNNEncoder(9783, hidden_size).to(device)
+decoder = nn_architectures.RNNDecoder(hidden_size, 15532, 69).to(device)
 translator_instance = translator.Translator(encoder_path, decoder_path)
 encoder, decoder = translator_instance.load_models(encoder, decoder)
 

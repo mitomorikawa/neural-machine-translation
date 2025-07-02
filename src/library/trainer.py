@@ -43,7 +43,7 @@ class TensorLoader:
     
     
     
-class Trainer:
+class BahdanauTrainer:
     """
     This class is responsible for training the model.
 

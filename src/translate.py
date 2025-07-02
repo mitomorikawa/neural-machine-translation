@@ -16,8 +16,8 @@ src_language = "English"
 
 translator_class = translator.Translator(encoder_path, decoder_path)
 hidden_size = 1024
-encoder = nn_architectures.EncoderRNN(9783, hidden_size)
-decoder = nn_architectures.AttnDecoderRNN(hidden_size, 15532, 69)
+encoder = nn_architectures.RNNEncoder(9783, hidden_size)
+decoder = nn_architectures.RNNDecoder(hidden_size, 15532, 69)
 
 encoder, decoder = translator_class.load_models(encoder, decoder)
 src_vocab = translator_class.load_vocab("../data/eng_vocab.pkl")

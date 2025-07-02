@@ -5,11 +5,12 @@ This module contains neural network architectures for encoding and decoding sequ
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from einops import rearrange
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-class EncoderRNN(nn.Module):
+class RNNEncoder(nn.Module):
     def __init__(self, input_size, hidden_size, dropout_p=0.1, padding_idx=2):
-        super(EncoderRNN, self).__init__()
+        super(RNNEncoder, self).__init__()
         self.hidden_size = hidden_size
 
         self.embedding = nn.Embedding(input_size, hidden_size, padding_idx=padding_idx)
@@ -40,9 +41,9 @@ class BahdanauAttention(nn.Module):
 
         return context, weights
 
-class AttnDecoderRNN(nn.Module):
+class RNNDecoder(nn.Module):
     def __init__(self, hidden_size, output_size, max_len, dropout_p=0.1):
-        super(AttnDecoderRNN, self).__init__()
+        super(RNNDecoder, self).__init__()
         self.embedding = nn.Embedding(output_size, hidden_size)
         self.hidden_size = hidden_size
         self.output_size = output_size
@@ -152,3 +153,215 @@ class AttnDecoderRNN(nn.Module):
         output = self.out(output)
 
         return output, hidden, attn_weights
+    
+class TransformerAttention(nn.Module):
+    def __init__(self, hidden_size, heads=8):
+        super(TransformerAttention, self).__init__()
+        self.Wq = nn.Linear(hidden_size, hidden_size)
+        self.Wk = nn.Linear(hidden_size, hidden_size)
+        self.Wv = nn.Linear(hidden_size, hidden_size)
+        self.hidden_size = hidden_size
+        self.heads = heads
+        self.head_dim = hidden_size // heads
+        self.softmax = nn.Softmax(dim=-1)
+        self.Wo = nn.Linear(hidden_size, hidden_size)
+
+        
+    def forward(self, query, key, value, mask=False):
+        """
+        Compute the attention scores.
+        Args:
+            query (torch.Tensor): Query tensor of shape (batch_size, seq_len, hidden_size).
+            key (torch.Tensor): Key tensor of shape (batch_size, seq_len, hidden_size).
+            value (torch.Tensor): Value tensor of shape (batch_size, seq_len, hidden_size).
+
+        Returns:
+            torch.Tensor: attention output tensor of shape (batch_size, seq_len, hidden_size).
+        
+        """
+        query = self.Wq(query)
+        key = self.Wk(key)
+        value = self.Wv(value)
+        batch_size, seq_len, _ = query.shape
+        
+        query, key, value = map(lambda x: rearrange(x, 'b l (h d) -> b h l d', h=self.heads), (query, key, value))
+        query /= (self.head_dim ** 0.5)
+        attention = torch.einsum('b h i d, b h j d -> b h i j', query, key)
+
+        positional_query = self.relativePositionalEncoding(query)
+        attention += positional_query
+        if mask:
+            mask_tensor = torch.triu(torch.full((batch_size, self.heads, seq_len, seq_len), float('-inf'), device=query.device), diagonal=1)
+            attention += mask_tensor
+        attention_score = self.softmax(attention)
+        attention_output = torch.einsum('b h l l, b h l d -> b h l d', attention_score, value)
+        attention_output = rearrange(attention_output, 'b h l d -> b l (h d)')
+        attention_output = self.Wo(attention_output)
+        return attention_output
+
+    def relativePositionalEncoding(self, matrix):
+        """ 
+        Multiply the matrix with a relative positional encoding matrix.
+
+        Args:
+            matrix (torch.Tensor): Input tensor of shape (batch_size, heads, sentence_len, head_dim).
+        returns:
+            torch.Tensor: Tensor with relative positional encoding applied. Shape (batch_size, heads, sentence_len, sentence_len).
+        """
+        batch_size, heads, seq_len, d = matrix.shape
+        
+        posenc_linear = nn.Linear(d, 2 * seq_len - 1).to(matrix.device)
+        posenc = posenc_linear(matrix)
+        posenc = torch.cat([posenc, torch.zeros((batch_size, heads, seq_len, 1), device=matrix.device)], dim=-1)
+        posenc = posenc.flatten(start_dim=-2)
+        posenc = torch.cat([posenc, torch.zeros((batch_size, heads, seq_len-1), device=matrix.device)], dim=-1)
+        posenc = posenc.reshape(batch_size, heads, seq_len+1, 2*seq_len-1)
+        posenc = posenc[:, :, :-1, -seq_len:]
+        return posenc
+    
+class TransformerEncoderLayer(nn.Module):
+    """ 
+    One layer of transformer encoder.
+    Attributes:
+        attention (TransformerAttention): Multi-head attention layer.
+        layerNorm1 (nn.LayerNorm): Layer normalization after attention.
+        linear1 (nn.Linear): First linear layer in the feedforward network.
+        relu (nn.ReLU): Activation function.
+        linear2 (nn.Linear): Second linear layer in the feedforward network.
+    """
+    def __init__(self, hidden_size, heads):
+        super(TransformerEncoderLayer, self).__init__()
+        self.attention = TransformerAttention(hidden_size, heads=heads)
+        self.layerNorm1 = nn.LayerNorm(hidden_size)
+        self.linear1 = nn.Linear(hidden_size, hidden_size)
+        self.relu = nn.ReLU()
+        self.linear2 = nn.Linear(hidden_size, hidden_size)
+
+    def forward(self, encoder_layer_input):
+        """
+        Args:
+            encoder_layer_input (torch.Tensor): Input tensor of shape (batch_size, seq_len, hidden_size).
+        
+        Returns:
+            torch.Tensor: Encoded output tensor of shape (batch_size, seq_len, hidden_size).
+        """
+
+        # Multihead attention
+        attention_output = self.attention(encoder_layer_input, encoder_layer_input, encoder_layer_input)
+        # Layernorm and add
+        attention_output = self.layerNorm1(attention_output + encoder_layer_input)
+        # Feedforward network
+        ff_output = self.linear2(self.relu(self.linear1(attention_output)))
+        # Layernorm and add
+        output = self.layerNorm1(ff_output + attention_output)
+        return output
+    
+class TransformerEncoder(nn.Module):
+    """ 
+        Encoder for the Transformer model.
+        Attributes:
+            - input_size (int): Size of the input vocabulary.
+            - hidden_size (int): Size of the hidden layer.
+            - heads (int): Number of attention heads.
+            - num_layer (int): Number of transformer encoder layers.
+            - dropout_p (float): Dropout probability.
+        """
+    def __init__(self, input_size, hidden_size, heads=8, num_layer=6, dropout_p=0.1):
+        super(TransformerEncoder, self).__init__()
+        self.embedding = nn.Embedding(input_size, hidden_size, padding_idx=2)
+        self.dropout = nn.Dropout(dropout_p)
+        self.num_layer = num_layer
+        self.encoderlayers = nn.ModuleList([TransformerEncoderLayer(hidden_size, heads) for _ in range(num_layer)])
+        
+    def forward(self, encoder_input):
+        """
+        Args:
+            encoder_input (torch.Tensor): Input tensor of shape (batch_size, seq_len).
+        
+        Returns:
+            torch.Tensor: Encoded output tensor of shape (batch_size, seq_len, hidden_size).
+        """
+        embedding = self.dropout(self.embedding(encoder_input))
+        for i in range(self.num_layer):
+            embedding = self.encoderlayers[i](embedding)
+        return embedding
+    
+class TransformerDecoderLayer(nn.Module):
+    """ 
+    One layer of transformer decoder.
+    Attributes:
+        attention1 (TransformerAttention): Multi-head attention layer for the first attention.
+        attention2 (TransformerAttention): Multi-head attention layer for the second attention.
+        layerNorm1 (nn.LayerNorm): Layer normalization after the first attention.
+        layerNorm2 (nn.LayerNorm): Layer normalization after the second attention.
+        layerNorm3 (nn.LayerNorm): Layer normalization after the feedforward network.
+        linear1 (nn.Linear): First linear layer in the feedforward network.
+        relu (nn.ReLU): Activation function.
+        linear2 (nn.Linear): Second linear layer in the feedforward network.
+    """
+    def __init__(self, hidden_size, heads):
+        super(TransformerDecoderLayer, self).__init__()
+        self.attention1 = TransformerAttention(hidden_size, heads=heads)
+        self.attention2 = TransformerAttention(hidden_size, heads=heads)
+        self.layerNorm1 = nn.LayerNorm(hidden_size)
+        self.layerNorm2 = nn.LayerNorm(hidden_size)
+        self.layerNorm3 = nn.LayerNorm(hidden_size)
+        self.linear1 = nn.Linear(hidden_size, hidden_size)
+        self.relu = nn.ReLU()
+        self.linear2 = nn.Linear(hidden_size, hidden_size)
+        
+    def forward(self, decoder_layer_input, encoder_output):
+        """
+        Args:
+            decoder_layer_input (torch.Tensor): Input tensor of shape (batch_size, seq_len, hidden_size).
+            encoder_output (torch.Tensor): Encoder output tensor of shape (batch_size, seq_len, hidden_size).
+        
+        Returns:
+            torch.Tensor: Decoded output tensor of shape (batch_size, seq_len, hidden_size).
+        """
+        # Masked multihead attention
+        attention1_output = self.attention1(decoder_layer_input, decoder_layer_input, decoder_layer_input, mask=True)
+        # Add and Layer Normalisation
+        attention1_output = self.layerNorm1(attention1_output + decoder_layer_input)
+        # Cross attention (no mask needed)
+        attention2_output = self.attention2(attention1_output, encoder_output, encoder_output, mask=False)
+        # Add and Layer Normalisation
+        attention2_output = self.layerNorm2(attention2_output + attention1_output)
+        # Feedforward network
+        ff_output = self.linear2(self.relu(self.linear1(attention2_output)))
+        # Add and Layer Normalisation
+        output = self.layerNorm3(ff_output + attention2_output)
+        return output
+
+class TransformerDecoder(nn.Module):
+    """ 
+    Decoder for the Transformer model.
+    Attributes:
+        - hidden_size (int): Size of the hidden layer.
+        - output_size (int): Size of the output vocabulary.
+        - heads (int): Number of attention heads.
+        - num_layer (int): Number of transformer decoder layers.
+        - dropout_p (float): Dropout probability.
+
+    """
+    def __init__(self, hidden_size, output_size, heads=8, num_layer=6, dropout_p=0.1):
+        super(TransformerDecoder, self).__init__()
+        self.embedding = nn.Embedding(output_size, hidden_size, padding_idx=2)
+        self.dropout = nn.Dropout(dropout_p)
+        self.num_layer = num_layer
+        self.decoderlayers = nn.ModuleList([TransformerDecoderLayer(hidden_size, heads=heads) for _ in range(num_layer)])
+        self.output = nn.Linear(hidden_size, output_size)
+
+    def forward(self, decoder_input, encoder_output):
+        """ 
+        Args:
+            decoder_input (torch.Tensor): Input tensor of shape (batch_size, seq_len).
+            encoder_output (torch.Tensor): Encoder output tensor of shape (batch_size, seq_len, hidden_size).
+        Returns:
+            torch.Tensor: Decoded output tensor of shape (batch_size, seq_len, output_size).
+        """        
+        embedding = self.dropout(self.embedding(decoder_input))
+        for i in range(self.num_layer):
+            embedding = self.decoderlayers[i](embedding, encoder_output)
+        output = self.output(embedding)
+        return output

@@ -14,7 +14,7 @@ def test_BahdanauEncoder():
     vocab_size = 5000
     hidden_size = 256
     
-    encoder = nn_architectures.EncoderRNN(input_size=vocab_size, hidden_size=hidden_size)
+    encoder = nn_architectures.RNNEncoder(input_size=vocab_size, hidden_size=hidden_size)
     
     input_tensor = torch.randint(0, vocab_size, (batch_size, seq_len))
     
@@ -32,8 +32,8 @@ def test_BahdanauDecoder():
     hidden_size = 1
     max_len = 10
     
-    encoder = nn_architectures.EncoderRNN(input_size=vocab_size, hidden_size=hidden_size)
-    decoder = nn_architectures.AttnDecoderRNN(hidden_size=hidden_size, output_size=vocab_size, max_len=max_len)
+    encoder = nn_architectures.RNNEncoder(input_size=vocab_size, hidden_size=hidden_size)
+    decoder = nn_architectures.RNNDecoder(hidden_size=hidden_size, output_size=vocab_size, max_len=max_len)
     
     encoder_input = torch.randint(0, vocab_size, (batch_size, encoder_seq_len))
     encoder_outputs, encoder_hidden = encoder(encoder_input)
@@ -62,8 +62,51 @@ def test_BahdanauDecoder():
     
     print("test_BahdanauDecoder passed!")
 
+def test_TransormerAttention():
+    batch_size = 2
+    seq_len = 5
+    hidden_size = 8
+    num_heads = 2
+    
+    attention_layer = nn_architectures.TransformerAttention(hidden_size, heads=num_heads)
+    
+    query = torch.randn(batch_size, seq_len, hidden_size)
+    key = torch.randn(batch_size, seq_len, hidden_size)
+    value = torch.randn(batch_size, seq_len, hidden_size)
+    query_reshaped = query.view(batch_size, seq_len, num_heads, hidden_size // num_heads).transpose(1, 2)
+
+    query_pos = attention_layer.relativePositionalEncoding(query_reshaped)
+    if query_pos.shape != (batch_size, num_heads, seq_len, seq_len):
+        raise ValueError(f"Expected query_pos shape {(batch_size, num_heads, seq_len, seq_len)}, got {query_pos.shape}")
+
+    output = attention_layer(query, key, value)
+    
+    if output.shape != (batch_size, seq_len, hidden_size):
+        raise ValueError(f"Expected output shape {(batch_size, seq_len, hidden_size)}, got {output.shape}")
+    
+def test_Transormer():
+    batch_size = 2
+    seq_len = 5
+    hidden_size = 8
+    num_heads = 2
+    encoder_input = torch.randint(0, 50, (batch_size, seq_len))
+    encoder = nn_architectures.TransformerEncoder(input_size=50, hidden_size=hidden_size, heads=num_heads)
+
+    encoder_output = encoder(encoder_input)
+    if encoder_output.shape != (batch_size, seq_len, hidden_size):
+        raise ValueError(f"Expected encoder output shape {(batch_size, seq_len, hidden_size)}, got {encoder_output.shape}")
+    print("test_TransormerAttention passed!")
+    output_size = 60
+    decoder_input = torch.randint(0, output_size, (batch_size, seq_len))
+    decoder = nn_architectures.TransformerDecoder(hidden_size, output_size)
+    decoder_output = decoder(decoder_input, encoder_output)
+    if decoder_output.shape!=(batch_size, seq_len, output_size):
+        raise ValueError(f"Expected decoder output shape {(batch_size, seq_len, output_size)}, got {decoder_output.shape}")
+
 if __name__ == "__main__":
     test_BahdanauEncoder()
     test_BahdanauDecoder()
+    test_TransormerAttention()
+    test_Transormer()
     print("All tests passed!")
 

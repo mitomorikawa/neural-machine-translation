@@ -16,20 +16,8 @@ src_train = loader.load("../data/eng_train.pt", device=device)
 tgt_train = loader.load("../data/fra_train.pt", device=device)
 src_val = loader.load("../data/eng_val.pt", device=device)
 tgt_val = loader.load("../data/fra_val.pt", device=device)
-hidden_size = 1024
+hidden_size = 128
 input_size = 9783
 output_size = 15532
-encoder = nn_architectures.RNNEncoder(input_size, hidden_size).to(device)
-decoder = nn_architectures.RNNDecoder(hidden_size, output_size, 69).to(device)
-
-train_instance = trainer.BahdanauTrainerTrainer(
-    encoder=encoder,
-    decoder=decoder,
-    loss_fn=torch.nn.CrossEntropyLoss(ignore_index=2),
-    lr=0.001,
-    n_epochs=100
-)
-
-train_dataloader = loader.create_dataloader(src_train, tgt_train, batch_size=128)
-val_dataloader = loader.create_dataloader(src_val, tgt_val, batch_size=128)
-train_instance.train(train_dataloader, val_dataloader, encoder_name="bahdanau_encoder", decoder_name="bahdanau_decoder")
+encoder = nn_architectures.TransformerEncoder(input_size, hidden_size, num_layer=1)
+decoder = nn_architectures.TransformerDecoder(hidden_size, output_size,num_layer=1)
