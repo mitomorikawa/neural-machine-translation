@@ -170,7 +170,7 @@ class TransformerAttention(nn.Module):
         self.query_seq_len = query_seq_len
         self.posenc_linear = nn.Linear(self.head_dim, 2*query_seq_len-1)
         
-    def forward(self, query, key, value):
+    def forward(self, query, key, value, padding_mask=None):
         """
         Compute the attention scores.
         Args:
@@ -197,6 +197,8 @@ class TransformerAttention(nn.Module):
         if self.mask:
             mask_tensor = torch.triu(torch.full((batch_size, self.heads, self.query_seq_len, self.query_seq_len), float('-inf'), device=query.device), diagonal=1)
             attention += mask_tensor
+        if padding_mask is not None:
+            attention += padding_mask
         attention_score = self.softmax(attention)
         attention_output = torch.einsum('b h q k, b h k d -> b h q d', attention_score, value)
         attention_output = rearrange(attention_output, 'b h l d -> b l (h d)')
@@ -241,17 +243,18 @@ class TransformerEncoderLayer(nn.Module):
         self.relu = nn.ReLU()
         self.linear2 = nn.Linear(4*hidden_size, hidden_size)
 
-    def forward(self, encoder_layer_input):
+    def forward(self, encoder_layer_input, padding_mask=None):
         """
         Args:
             encoder_layer_input (torch.Tensor): Input tensor of shape (batch_size, seq_len, hidden_size).
+            padding_mask (torch.Tensor): Padding mask of shape (batch_size, num_heads, seq_len, seq_len).
         
         Returns:
             torch.Tensor: Encoded output tensor of shape (batch_size, seq_len, hidden_size).
         """
 
         # Multihead attention
-        attention_output = self.attention(encoder_layer_input, encoder_layer_input, encoder_layer_input)
+        attention_output = self.attention(encoder_layer_input, encoder_layer_input, encoder_layer_input, padding_mask)
         # Layernorm and add
         attention_output = self.layerNorm1(attention_output + encoder_layer_input)
         # Feedforward network
@@ -286,9 +289,16 @@ class TransformerEncoder(nn.Module):
             torch.Tensor: Encoded output tensor of shape (batch_size, seq_len, hidden_size).
             0: for consistency with RNNEncoder
         """
+        # Create padding mask from input (assuming padding_idx=2)
+        padding_mask = (encoder_input == 2).unsqueeze(1).unsqueeze(1)  # (batch_size, 1, 1, seq_len)
+        padding_mask = padding_mask.expand(-1, self.encoderlayers[0].attention.heads, encoder_input.size(1), -1)  # (batch_size, heads, seq_len, seq_len)
+        padding_mask = padding_mask.float().masked_fill(padding_mask, float('-inf'))
+        print(f"encoder_input: {encoder_input}")
+        print(f"mask: {padding_mask}")
+
         embedding = self.dropout(self.embedding(encoder_input))
         for i in range(self.num_layer):
-            embedding = self.encoderlayers[i](embedding)
+            embedding = self.encoderlayers[i](embedding, padding_mask)
         return embedding,0
     
 class TransformerDecoderLayer(nn.Module):
@@ -315,21 +325,23 @@ class TransformerDecoderLayer(nn.Module):
         self.relu = nn.ReLU()
         self.linear2 = nn.Linear(4*hidden_size, hidden_size)
         
-    def forward(self, decoder_layer_input, encoder_output):
+    def forward(self, decoder_layer_input, encoder_output, self_padding_mask=None, cross_padding_mask=None):
         """
         Args:
             decoder_layer_input (torch.Tensor): Input tensor of shape (batch_size, seq_len, hidden_size).
             encoder_output (torch.Tensor): Encoder output tensor of shape (batch_size, seq_len, hidden_size).
+            self_padding_mask (torch.Tensor): Padding mask for self-attention of shape (batch_size, num_heads, tgt_seq_len, tgt_seq_len).
+            cross_padding_mask (torch.Tensor): Padding mask for cross-attention of shape (batch_size, num_heads, tgt_seq_len, src_seq_len).
         
         Returns:
             torch.Tensor: Decoded output tensor of shape (batch_size, seq_len, hidden_size).
         """
         # Masked multihead attention
-        attention1_output = self.attention1(decoder_layer_input, decoder_layer_input, decoder_layer_input)
+        attention1_output = self.attention1(decoder_layer_input, decoder_layer_input, decoder_layer_input, self_padding_mask)
         # Add and Layer Normalisation
         attention1_output = self.layerNorm1(attention1_output + decoder_layer_input)
         # Cross attention (no mask needed)
-        attention2_output = self.attention2(attention1_output, encoder_output, encoder_output)
+        attention2_output = self.attention2(attention1_output, encoder_output, encoder_output, cross_padding_mask)
         # Add and Layer Normalisation
         attention2_output = self.layerNorm2(attention2_output + attention1_output)
         # Feedforward network
@@ -357,18 +369,43 @@ class TransformerDecoder(nn.Module):
         self.decoderlayers = nn.ModuleList([TransformerDecoderLayer(tgt_seq_len, hidden_size, heads=heads) for _ in range(num_layer)])
         self.output = nn.Linear(hidden_size, output_size)
 
-    def forward(self, encoder_outputs, encoder_hidden, decoder_input):
+    def forward(self, encoder_outputs, encoder_hidden, decoder_input, encoder_input=None):
         """ 
         Args:
             encoder_outputs (torch.Tensor): Encoder output tensor of shape (batch_size, seq_len, hidden_size).
             encoder_hidden (any): For consistency with Bahdanau decoder
             decoder_input (torch.Tensor): Input tensor of shape (batch_size, seq_len).
+            encoder_input (torch.Tensor): Encoder input tensor of shape (batch_size, seq_len) for creating padding masks.
         Returns:
             torch.Tensor: Decoded output tensor of shape (batch_size, seq_len, output_size).
             0: For consistency with RNNDecoder
         """        
+        tgt_seq_len = decoder_input.size(1)
+        num_heads = self.decoderlayers[0].attention1.heads
+        
+        # Create self-attention padding mask for decoder (assuming padding_idx=2)
+        self_padding_mask = (decoder_input == 2).unsqueeze(1).unsqueeze(1)  # (batch_size, 1, 1, tgt_seq_len)
+        self_padding_mask = self_padding_mask.expand(-1, num_heads, tgt_seq_len, -1)  # (batch_size, heads, tgt_seq_len, tgt_seq_len)
+        self_padding_mask = self_padding_mask.float().masked_fill(self_padding_mask, float('-inf'))
+        
+        # Create cross-attention padding mask based on encoder input
+        if encoder_input is not None:
+            encoder_padding = (encoder_input == 2).unsqueeze(1).unsqueeze(1)  # (batch_size, 1, 1, src_seq_len)
+            cross_padding_mask = encoder_padding.expand(-1, num_heads, tgt_seq_len, -1)  # (batch_size, heads, tgt_seq_len, src_seq_len)
+            cross_padding_mask = cross_padding_mask.float().masked_fill(cross_padding_mask, float('-inf'))
+            print(f"encoder_input: {encoder_input}")
+            print(f"decoder_input: {decoder_input}")
+            print(f"self_padding_mask: {self_padding_mask}")
+            print(f"cross_padding_mask: {cross_padding_mask}")
+        else:
+            cross_padding_mask = None
+        
         embedding = self.dropout(self.embedding(decoder_input))
         for i in range(self.num_layer):
-            embedding = self.decoderlayers[i](embedding, encoder_outputs)
+            embedding = self.decoderlayers[i](embedding, encoder_outputs, self_padding_mask, cross_padding_mask)
         output = self.output(embedding)
         return output, 0,0
+    
+
+    ## relposenc and padding mask needs fixing. implement autoregression aw!
+    
