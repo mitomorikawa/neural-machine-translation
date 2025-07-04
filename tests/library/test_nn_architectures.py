@@ -100,14 +100,54 @@ def test_Transormer():
     tgt_seq_len = 6
     decoder_input = torch.randint(0, output_size, (batch_size, tgt_seq_len))
     decoder = nn_architectures.TransformerDecoder(hidden_size, output_size, tgt_seq_len)
-    decoder_output, _,_ = decoder(encoder_output,encoder_hidden,decoder_input, )
+    decoder_output, _,_ = decoder(encoder_output,encoder_hidden,decoder_input,encoder_input)
     if decoder_output.shape!=(batch_size, tgt_seq_len, output_size):
         raise ValueError(f"Expected decoder output shape {(batch_size, tgt_seq_len, output_size)}, got {decoder_output.shape}")
+    print("test_Transormer passed!")
+
+def test_TransformerPaddingMask():
+    batch_size = 2
+    seq_len = 10
+    hidden_size = 16
+    num_heads = 4
+    vocab_size = 50
+    output_size = 60
+    tgt_seq_len = 8
+    
+    # Create encoder input with padding tokens (padding_idx=2)
+    encoder_input = torch.randint(3, vocab_size, (batch_size, seq_len))
+    # Add some padding tokens at the end
+    encoder_input[:-1, -3:] = 2  # Last 3 tokens are padding
+    encoder_input[-1, -2:] = 2  # Last 2 tokens are padding for the last sequence
+    
+    # Create decoder input with padding tokens
+    decoder_input = torch.randint(3, output_size, (batch_size, tgt_seq_len))
+    # Add some padding tokens at the end
+    decoder_input[1:, -2:] = 2  # Last 2 tokens are padding
+    decoder_input[0, -5:] = 2  # Last token is padding for the first sequence
+    
+    encoder = nn_architectures.TransformerEncoder(vocab_size, hidden_size, seq_len, heads=num_heads, num_layer=2)
+    decoder = nn_architectures.TransformerDecoder(hidden_size, output_size, tgt_seq_len, heads=num_heads, num_layer=2)
+    
+    # Forward pass through encoder
+    encoder_output, _ = encoder(encoder_input)
+    
+    # Forward pass through decoder with padding masks
+    decoder_output, _, _ = decoder(encoder_output, None, decoder_input, encoder_input)
+    
+    assert decoder_output.shape == (batch_size, tgt_seq_len, output_size), f"Expected shape {(batch_size, tgt_seq_len, output_size)}, got {decoder_output.shape}"
+    
+    # Test that attention works correctly with padding
+    # The output should be valid even with padding tokens
+    assert not torch.isnan(decoder_output).any(), "Output contains NaN values"
+    assert not torch.isinf(decoder_output).any(), "Output contains infinite values"
+    
+    print("test_TransformerPaddingMask passed!")
 
 if __name__ == "__main__":
     test_BahdanauEncoder()
     test_BahdanauDecoder()
     test_TransormerAttention()
     test_Transormer()
+    test_TransformerPaddingMask()
     print("All tests passed!")
-
