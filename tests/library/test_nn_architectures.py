@@ -68,7 +68,7 @@ def test_TransormerAttention():
     hidden_size = 8
     num_heads = 2
     
-    attention_layer = nn_architectures.TransformerAttention(hidden_size, heads=num_heads)
+    attention_layer = nn_architectures.TransformerAttention(seq_len, hidden_size, heads=num_heads)
     
     query = torch.randn(batch_size, seq_len, hidden_size)
     key = torch.randn(batch_size, seq_len, hidden_size)
@@ -90,18 +90,19 @@ def test_Transormer():
     hidden_size = 8
     num_heads = 2
     encoder_input = torch.randint(0, 50, (batch_size, seq_len))
-    encoder = nn_architectures.TransformerEncoder(input_size=50, hidden_size=hidden_size, heads=num_heads)
+    encoder = nn_architectures.TransformerEncoder(50, hidden_size, seq_len,heads=num_heads)
 
-    encoder_output = encoder(encoder_input)
+    encoder_output,encoder_hidden = encoder(encoder_input)
     if encoder_output.shape != (batch_size, seq_len, hidden_size):
         raise ValueError(f"Expected encoder output shape {(batch_size, seq_len, hidden_size)}, got {encoder_output.shape}")
     print("test_TransormerAttention passed!")
     output_size = 60
-    decoder_input = torch.randint(0, output_size, (batch_size, seq_len))
-    decoder = nn_architectures.TransformerDecoder(hidden_size, output_size)
-    decoder_output = decoder(decoder_input, encoder_output)
-    if decoder_output.shape!=(batch_size, seq_len, output_size):
-        raise ValueError(f"Expected decoder output shape {(batch_size, seq_len, output_size)}, got {decoder_output.shape}")
+    tgt_seq_len = 6
+    decoder_input = torch.randint(0, output_size, (batch_size, tgt_seq_len))
+    decoder = nn_architectures.TransformerDecoder(hidden_size, output_size, tgt_seq_len)
+    decoder_output, _,_ = decoder(encoder_output,encoder_hidden,decoder_input, )
+    if decoder_output.shape!=(batch_size, tgt_seq_len, output_size):
+        raise ValueError(f"Expected decoder output shape {(batch_size, tgt_seq_len, output_size)}, got {decoder_output.shape}")
 
 if __name__ == "__main__":
     test_BahdanauEncoder()

@@ -19,5 +19,18 @@ tgt_val = loader.load("../data/fra_val.pt", device=device)
 hidden_size = 128
 input_size = 9783
 output_size = 15532
+batch_size = 128
 encoder = nn_architectures.TransformerEncoder(input_size, hidden_size, num_layer=1)
 decoder = nn_architectures.TransformerDecoder(hidden_size, output_size,num_layer=1)
+
+train_instance = trainer.Trainer(
+    encoder=encoder,
+    decoder=decoder,
+    loss_fn=torch.nn.CrossEntropyLoss(ignore_index=2),
+    lr=0.001,
+    n_epochs=100
+)
+
+train_dataloader = loader.create_dataloader(src_train, tgt_train, batch_size=batch_size)
+val_dataloader = loader.create_dataloader(src_val, tgt_val, batch_size=batch_size)
+train_instance.train(train_dataloader, val_dataloader, encoder_name="transformer_encoder", decoder_name="transformer_decoder")

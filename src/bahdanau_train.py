@@ -22,7 +22,7 @@ output_size = 15532
 encoder = nn_architectures.RNNEncoder(input_size, hidden_size).to(device)
 decoder = nn_architectures.RNNDecoder(hidden_size, output_size, 69).to(device)
 
-train_instance = trainer.BahdanauTrainerTrainer(
+train_instance = trainer.Trainer(
     encoder=encoder,
     decoder=decoder,
     loss_fn=torch.nn.CrossEntropyLoss(ignore_index=2),

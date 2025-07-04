@@ -155,7 +155,7 @@ class RNNDecoder(nn.Module):
         return output, hidden, attn_weights
     
 class TransformerAttention(nn.Module):
-    def __init__(self, hidden_size, heads=8):
+    def __init__(self, query_seq_len, hidden_size, heads=8, mask=False, cross_attention=False):
         super(TransformerAttention, self).__init__()
         self.Wq = nn.Linear(hidden_size, hidden_size)
         self.Wk = nn.Linear(hidden_size, hidden_size)
@@ -165,16 +165,19 @@ class TransformerAttention(nn.Module):
         self.head_dim = hidden_size // heads
         self.softmax = nn.Softmax(dim=-1)
         self.Wo = nn.Linear(hidden_size, hidden_size)
-
+        self.mask = mask
+        self.cross_attention = cross_attention
+        self.query_seq_len = query_seq_len
+        self.posenc_linear = nn.Linear(self.head_dim, 2*query_seq_len-1)
         
-    def forward(self, query, key, value, mask=False):
+    def forward(self, query, key, value):
         """
         Compute the attention scores.
         Args:
             query (torch.Tensor): Query tensor of shape (batch_size, seq_len, hidden_size).
             key (torch.Tensor): Key tensor of shape (batch_size, seq_len, hidden_size).
             value (torch.Tensor): Value tensor of shape (batch_size, seq_len, hidden_size).
-
+            padding_mask (torch.Tensor): padding mask of shape (b, h, query_seq_len, key_seq_len). Every element is 0 or -inf.
         Returns:
             torch.Tensor: attention output tensor of shape (batch_size, seq_len, hidden_size).
         
@@ -182,24 +185,25 @@ class TransformerAttention(nn.Module):
         query = self.Wq(query)
         key = self.Wk(key)
         value = self.Wv(value)
-        batch_size, seq_len, _ = query.shape
+        batch_size = query.shape[0]
         
         query, key, value = map(lambda x: rearrange(x, 'b l (h d) -> b h l d', h=self.heads), (query, key, value))
         query /= (self.head_dim ** 0.5)
         attention = torch.einsum('b h i d, b h j d -> b h i j', query, key)
 
-        positional_query = self.relativePositionalEncoding(query)
-        attention += positional_query
-        if mask:
-            mask_tensor = torch.triu(torch.full((batch_size, self.heads, seq_len, seq_len), float('-inf'), device=query.device), diagonal=1)
+        if not self.cross_attention:
+            positional_query = self.relativePositionalEncoding(query)
+            attention += positional_query
+        if self.mask:
+            mask_tensor = torch.triu(torch.full((batch_size, self.heads, self.query_seq_len, self.query_seq_len), float('-inf'), device=query.device), diagonal=1)
             attention += mask_tensor
         attention_score = self.softmax(attention)
-        attention_output = torch.einsum('b h l l, b h l d -> b h l d', attention_score, value)
+        attention_output = torch.einsum('b h q k, b h k d -> b h q d', attention_score, value)
         attention_output = rearrange(attention_output, 'b h l d -> b l (h d)')
         attention_output = self.Wo(attention_output)
         return attention_output
 
-    def relativePositionalEncoding(self, matrix):
+    def relativePositionalEncoding(self, matrix): 
         """ 
         Multiply the matrix with a relative positional encoding matrix.
 
@@ -208,15 +212,14 @@ class TransformerAttention(nn.Module):
         returns:
             torch.Tensor: Tensor with relative positional encoding applied. Shape (batch_size, heads, sentence_len, sentence_len).
         """
-        batch_size, heads, seq_len, d = matrix.shape
+        batch_size = matrix.shape[0]
         
-        posenc_linear = nn.Linear(d, 2 * seq_len - 1).to(matrix.device)
-        posenc = posenc_linear(matrix)
-        posenc = torch.cat([posenc, torch.zeros((batch_size, heads, seq_len, 1), device=matrix.device)], dim=-1)
+        posenc = self.posenc_linear(matrix)
+        posenc = torch.cat([posenc, torch.zeros((batch_size, self.heads, self.query_seq_len, 1), device=matrix.device)], dim=-1)
         posenc = posenc.flatten(start_dim=-2)
-        posenc = torch.cat([posenc, torch.zeros((batch_size, heads, seq_len-1), device=matrix.device)], dim=-1)
-        posenc = posenc.reshape(batch_size, heads, seq_len+1, 2*seq_len-1)
-        posenc = posenc[:, :, :-1, -seq_len:]
+        posenc = torch.cat([posenc, torch.zeros((batch_size, self.heads, self.query_seq_len-1), device=matrix.device)], dim=-1)
+        posenc = posenc.reshape(batch_size, self.heads, self.query_seq_len+1, 2*self.query_seq_len-1)
+        posenc = posenc[:, :, :-1, -self.query_seq_len:]
         return posenc
     
 class TransformerEncoderLayer(nn.Module):
@@ -229,13 +232,14 @@ class TransformerEncoderLayer(nn.Module):
         relu (nn.ReLU): Activation function.
         linear2 (nn.Linear): Second linear layer in the feedforward network.
     """
-    def __init__(self, hidden_size, heads):
+    def __init__(self, src_seq_len, hidden_size, heads):
         super(TransformerEncoderLayer, self).__init__()
-        self.attention = TransformerAttention(hidden_size, heads=heads)
+        self.attention = TransformerAttention(src_seq_len, hidden_size, heads=heads)
         self.layerNorm1 = nn.LayerNorm(hidden_size)
-        self.linear1 = nn.Linear(hidden_size, hidden_size)
+        self.layerNorm2 = nn.LayerNorm(hidden_size)
+        self.linear1 = nn.Linear(hidden_size, 4*hidden_size)
         self.relu = nn.ReLU()
-        self.linear2 = nn.Linear(hidden_size, hidden_size)
+        self.linear2 = nn.Linear(4*hidden_size, hidden_size)
 
     def forward(self, encoder_layer_input):
         """
@@ -253,7 +257,7 @@ class TransformerEncoderLayer(nn.Module):
         # Feedforward network
         ff_output = self.linear2(self.relu(self.linear1(attention_output)))
         # Layernorm and add
-        output = self.layerNorm1(ff_output + attention_output)
+        output = self.layerNorm2(ff_output + attention_output)
         return output
     
 class TransformerEncoder(nn.Module):
@@ -266,12 +270,12 @@ class TransformerEncoder(nn.Module):
             - num_layer (int): Number of transformer encoder layers.
             - dropout_p (float): Dropout probability.
         """
-    def __init__(self, input_size, hidden_size, heads=8, num_layer=6, dropout_p=0.1):
+    def __init__(self, input_size, hidden_size, src_seq_len, heads=8, num_layer=6, dropout_p=0.1):
         super(TransformerEncoder, self).__init__()
         self.embedding = nn.Embedding(input_size, hidden_size, padding_idx=2)
         self.dropout = nn.Dropout(dropout_p)
         self.num_layer = num_layer
-        self.encoderlayers = nn.ModuleList([TransformerEncoderLayer(hidden_size, heads) for _ in range(num_layer)])
+        self.encoderlayers = nn.ModuleList([TransformerEncoderLayer(src_seq_len, hidden_size, heads) for _ in range(num_layer)])
         
     def forward(self, encoder_input):
         """
@@ -280,11 +284,12 @@ class TransformerEncoder(nn.Module):
         
         Returns:
             torch.Tensor: Encoded output tensor of shape (batch_size, seq_len, hidden_size).
+            0: for consistency with RNNEncoder
         """
         embedding = self.dropout(self.embedding(encoder_input))
         for i in range(self.num_layer):
             embedding = self.encoderlayers[i](embedding)
-        return embedding
+        return embedding,0
     
 class TransformerDecoderLayer(nn.Module):
     """ 
@@ -299,16 +304,16 @@ class TransformerDecoderLayer(nn.Module):
         relu (nn.ReLU): Activation function.
         linear2 (nn.Linear): Second linear layer in the feedforward network.
     """
-    def __init__(self, hidden_size, heads):
+    def __init__(self, tgt_seq_len, hidden_size, heads):
         super(TransformerDecoderLayer, self).__init__()
-        self.attention1 = TransformerAttention(hidden_size, heads=heads)
-        self.attention2 = TransformerAttention(hidden_size, heads=heads)
+        self.attention1 = TransformerAttention(tgt_seq_len, hidden_size, heads=heads, mask=True)
+        self.attention2 = TransformerAttention(tgt_seq_len, hidden_size, heads=heads, cross_attention=True)
         self.layerNorm1 = nn.LayerNorm(hidden_size)
         self.layerNorm2 = nn.LayerNorm(hidden_size)
         self.layerNorm3 = nn.LayerNorm(hidden_size)
-        self.linear1 = nn.Linear(hidden_size, hidden_size)
+        self.linear1 = nn.Linear(hidden_size, 4*hidden_size)
         self.relu = nn.ReLU()
-        self.linear2 = nn.Linear(hidden_size, hidden_size)
+        self.linear2 = nn.Linear(4*hidden_size, hidden_size)
         
     def forward(self, decoder_layer_input, encoder_output):
         """
@@ -320,11 +325,11 @@ class TransformerDecoderLayer(nn.Module):
             torch.Tensor: Decoded output tensor of shape (batch_size, seq_len, hidden_size).
         """
         # Masked multihead attention
-        attention1_output = self.attention1(decoder_layer_input, decoder_layer_input, decoder_layer_input, mask=True)
+        attention1_output = self.attention1(decoder_layer_input, decoder_layer_input, decoder_layer_input)
         # Add and Layer Normalisation
         attention1_output = self.layerNorm1(attention1_output + decoder_layer_input)
         # Cross attention (no mask needed)
-        attention2_output = self.attention2(attention1_output, encoder_output, encoder_output, mask=False)
+        attention2_output = self.attention2(attention1_output, encoder_output, encoder_output)
         # Add and Layer Normalisation
         attention2_output = self.layerNorm2(attention2_output + attention1_output)
         # Feedforward network
@@ -344,24 +349,26 @@ class TransformerDecoder(nn.Module):
         - dropout_p (float): Dropout probability.
 
     """
-    def __init__(self, hidden_size, output_size, heads=8, num_layer=6, dropout_p=0.1):
+    def __init__(self, hidden_size, output_size, tgt_seq_len, heads=8, num_layer=6, dropout_p=0.1):
         super(TransformerDecoder, self).__init__()
         self.embedding = nn.Embedding(output_size, hidden_size, padding_idx=2)
         self.dropout = nn.Dropout(dropout_p)
         self.num_layer = num_layer
-        self.decoderlayers = nn.ModuleList([TransformerDecoderLayer(hidden_size, heads=heads) for _ in range(num_layer)])
+        self.decoderlayers = nn.ModuleList([TransformerDecoderLayer(tgt_seq_len, hidden_size, heads=heads) for _ in range(num_layer)])
         self.output = nn.Linear(hidden_size, output_size)
 
-    def forward(self, decoder_input, encoder_output):
+    def forward(self, encoder_outputs, encoder_hidden, decoder_input):
         """ 
         Args:
+            encoder_outputs (torch.Tensor): Encoder output tensor of shape (batch_size, seq_len, hidden_size).
+            encoder_hidden (any): For consistency with Bahdanau decoder
             decoder_input (torch.Tensor): Input tensor of shape (batch_size, seq_len).
-            encoder_output (torch.Tensor): Encoder output tensor of shape (batch_size, seq_len, hidden_size).
         Returns:
             torch.Tensor: Decoded output tensor of shape (batch_size, seq_len, output_size).
+            0: For consistency with RNNDecoder
         """        
         embedding = self.dropout(self.embedding(decoder_input))
         for i in range(self.num_layer):
-            embedding = self.decoderlayers[i](embedding, encoder_output)
+            embedding = self.decoderlayers[i](embedding, encoder_outputs)
         output = self.output(embedding)
-        return output
+        return output, 0,0
