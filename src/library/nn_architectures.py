@@ -168,7 +168,7 @@ class TransformerAttention(nn.Module):
         self.mask = mask
         self.cross_attention = cross_attention
         self.query_seq_len = query_seq_len
-        self.posenc_linear = nn.Linear(self.head_dim, 2*query_seq_len-1)
+        self.positional_embedding = torch.nn.Parameter(torch.randn(2*query_seq_len - 1, self.head_dim))
         
     def forward(self, query, key, value, padding_mask=None):
         """
@@ -216,7 +216,7 @@ class TransformerAttention(nn.Module):
         """
         batch_size = matrix.shape[0]
         
-        posenc = self.posenc_linear(matrix)
+        posenc = torch.einsum('b h i d, j d -> b h i j', matrix, self.positional_embedding)
         posenc = torch.cat([posenc, torch.zeros((batch_size, self.heads, self.query_seq_len, 1), device=matrix.device)], dim=-1)
         posenc = posenc.flatten(start_dim=-2)
         posenc = torch.cat([posenc, torch.zeros((batch_size, self.heads, self.query_seq_len-1), device=matrix.device)], dim=-1)
@@ -293,8 +293,6 @@ class TransformerEncoder(nn.Module):
         padding_mask = (encoder_input == 2).unsqueeze(1).unsqueeze(1)  # (batch_size, 1, 1, seq_len)
         padding_mask = padding_mask.expand(-1, self.encoderlayers[0].attention.heads, encoder_input.size(1), -1)  # (batch_size, heads, seq_len, seq_len)
         padding_mask = padding_mask.float().masked_fill(padding_mask, float('-inf'))
-        print(f"encoder_input: {encoder_input}")
-        print(f"mask: {padding_mask}")
 
         embedding = self.dropout(self.embedding(encoder_input))
         for i in range(self.num_layer):
@@ -393,10 +391,6 @@ class TransformerDecoder(nn.Module):
             encoder_padding = (encoder_input == 2).unsqueeze(1).unsqueeze(1)  # (batch_size, 1, 1, src_seq_len)
             cross_padding_mask = encoder_padding.expand(-1, num_heads, tgt_seq_len, -1)  # (batch_size, heads, tgt_seq_len, src_seq_len)
             cross_padding_mask = cross_padding_mask.float().masked_fill(cross_padding_mask, float('-inf'))
-            print(f"encoder_input: {encoder_input}")
-            print(f"decoder_input: {decoder_input}")
-            print(f"self_padding_mask: {self_padding_mask}")
-            print(f"cross_padding_mask: {cross_padding_mask}")
         else:
             cross_padding_mask = None
         
