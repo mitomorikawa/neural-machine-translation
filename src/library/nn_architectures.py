@@ -53,7 +53,7 @@ class RNNDecoder(nn.Module):
         self.dropout = nn.Dropout(dropout_p)
         self.max_len = max_len
 
-    def forward(self, encoder_outputs, encoder_hidden, target_tensor=None, greedy=True, beam_width=5):
+    def forward(self, encoder_outputs, encoder_hidden, target_tensor=None, source_tensor=None, greedy=True, beam_width=5):
         """
         args
         encoder_outputs (torch.Tensor): The outputs from the encoder.
@@ -366,8 +366,9 @@ class TransformerDecoder(nn.Module):
         self.num_layer = num_layer
         self.decoderlayers = nn.ModuleList([TransformerDecoderLayer(tgt_seq_len, hidden_size, heads=heads) for _ in range(num_layer)])
         self.output = nn.Linear(hidden_size, output_size)
+        self.tgt_seq_len = tgt_seq_len
 
-    def forward(self, encoder_outputs, encoder_hidden, decoder_input, encoder_input=None):
+    def forward(self, encoder_outputs, encoder_hidden, decoder_input, encoder_input=None, greedy=True, beam_width=5):
         """ 
         Args:
             encoder_outputs (torch.Tensor): Encoder output tensor of shape (batch_size, seq_len, hidden_size).
@@ -378,18 +379,17 @@ class TransformerDecoder(nn.Module):
             torch.Tensor: Decoded output tensor of shape (batch_size, seq_len, output_size).
             0: For consistency with RNNDecoder
         """        
-        tgt_seq_len = decoder_input.size(1)
         num_heads = self.decoderlayers[0].attention1.heads
         
         # Create self-attention padding mask for decoder (assuming padding_idx=2)
         self_padding_mask = (decoder_input == 2).unsqueeze(1).unsqueeze(1)  # (batch_size, 1, 1, tgt_seq_len)
-        self_padding_mask = self_padding_mask.expand(-1, num_heads, tgt_seq_len, -1)  # (batch_size, heads, tgt_seq_len, tgt_seq_len)
+        self_padding_mask = self_padding_mask.expand(-1, num_heads, self.tgt_seq_len, -1)  # (batch_size, heads, tgt_seq_len, tgt_seq_len)
         self_padding_mask = self_padding_mask.float().masked_fill(self_padding_mask, float('-inf'))
         
         # Create cross-attention padding mask based on encoder input
         if encoder_input is not None:
             encoder_padding = (encoder_input == 2).unsqueeze(1).unsqueeze(1)  # (batch_size, 1, 1, src_seq_len)
-            cross_padding_mask = encoder_padding.expand(-1, num_heads, tgt_seq_len, -1)  # (batch_size, heads, tgt_seq_len, src_seq_len)
+            cross_padding_mask = encoder_padding.expand(-1, num_heads, self.tgt_seq_len, -1)  # (batch_size, heads, tgt_seq_len, src_seq_len)
             cross_padding_mask = cross_padding_mask.float().masked_fill(cross_padding_mask, float('-inf'))
         else:
             cross_padding_mask = None
@@ -398,8 +398,98 @@ class TransformerDecoder(nn.Module):
         for i in range(self.num_layer):
             embedding = self.decoderlayers[i](embedding, encoder_outputs, self_padding_mask, cross_padding_mask)
         output = self.output(embedding)
+        output = F.log_softmax(output, dim=-1)
         return output, 0,0
     
+    def infer(self, encoder_input, encoder_output, beam_width=5):
+        """
+        Args:
+            encoder_input (torch.Tensor): Encoder input tensor of shape (1, seq_len).
+            encoder_output (torch.Tensor): Encoder output tensor of shape (1, seq_len, hidden_size).
+            beam_width (int): Width of the beam for beam search decoding.
+        
+        Returns:
+            torch.Tensor: Decoded output tensor of shape (1, seq_len).
+        """
+        
+        # Initialize decoder input with padding tokens
+        decoder_input = torch.full((1, self.tgt_seq_len), 2, dtype=torch.long, device=device)
+        decoder_input[0, 0] = 0  # Start token
+        
+        # Initialize beam with dictionaries for better clarity
+        sequences = []
+        for _ in range(beam_width):
+            sequences.append({
+                'tokens': decoder_input.clone(),
+                'score': 0.0,
+                'length': 1  # Track actual sequence length
+            })
+        
+        complete_sequences = []
+        
+        for i in range(self.tgt_seq_len - 1):
+            all_candidates = []
+            
+            for seq in sequences:
+                # Get predictions for current sequence
+                decoder_output, _, _ = self.forward(encoder_output, 0, seq['tokens'], encoder_input)
+                
+                # Get top k predictions at current position
+                topk_scores, topk_indices = decoder_output[0, i, :].topk(beam_width)
+                
+                for k in range(beam_width):
+                    # Skip if we're extending a completed sequence
+                    if seq['tokens'][0, seq['length'] - 1] == 1:  # EOS token
+                        continue
+                        
+                    # Create new candidate
+                    candidate = {
+                        'tokens': seq['tokens'].clone(),
+                        'score': seq['score'] + topk_scores[k].item(),
+                        'length': seq['length'] + 1
+                    }
+                    candidate['tokens'][0, i + 1] = topk_indices[k]
+                    
+                    # Check if this candidate ends with EOS
+                    if topk_indices[k] == 1:  # EOS token
+                        # Apply length normalization
+                        candidate['normalized_score'] = candidate['score'] / candidate['length']
+                        complete_sequences.append(candidate)
+                    else:
+                        all_candidates.append(candidate)
+            
+            # Select top beam_width candidates
+            if all_candidates:
+                sequences = sorted(all_candidates, key=lambda x: x['score'], reverse=True)[:beam_width]
+            else:
+                break  # All sequences have ended
+            
+            # Early stopping if we have enough complete sequences
+            if len(complete_sequences) >= beam_width:
+                break
+        
+        # Add any remaining sequences as complete
+        for seq in sequences:
+            seq['normalized_score'] = seq['score'] / seq['length']
+            complete_sequences.append(seq)
+        
+        # Return the best sequence
+        if complete_sequences:
+            best_sequence = max(complete_sequences, key=lambda x: x['normalized_score'])
+            return best_sequence['tokens']
+        else:
+            # Fallback: return the highest scoring incomplete sequence
+            best_sequence = max(sequences, key=lambda x: x['score'])
+            return best_sequence['tokens']
 
-    ## relposenc and padding mask needs fixing. implement autoregression aw!
+
+        
+
+        
+    
+
+
+            
+            
+
     

@@ -46,7 +46,7 @@ class Translator:
             vocab = pickle.load(f)
         return vocab
     
-    def translate(self, src_idx, encoder, decoder, tgt_idx2word, eos_token=1):    
+    def translate(self, src_idx, encoder, decoder, tgt_idx2word, eos_token=1, transformer=False):    
         """ 
         Translates the source text using the encoder and decoder models.
         
@@ -63,19 +63,31 @@ class Translator:
 
         with torch.no_grad():
             encoder_outputs, encoder_hidden = encoder(src_idx)
-            decoder_outputs, _, _ = decoder(encoder_outputs, encoder_hidden, greedy=False, beam_width=5)
-            _, topi = decoder_outputs.topk(1)
-            translated_indices = topi.squeeze(1).tolist()
-            decoded_words = []
+            if transformer:
+                decoder_outputs = decoder.infer(src_idx, encoder_outputs)
+                translated_indices = decoder_outputs.squeeze(0).tolist()
+                decoded_words = []
+                        # For transformer, translated_indices is a 1D list of token IDs
+                for idx in translated_indices:
+                    if idx == 0 or idx == 2:
+                        continue
+                    elif idx == eos_token:
+                        break
+                    decoded_words.append(tgt_idx2word[idx])
+            else:
+                decoder_outputs, _, _ = decoder(encoder_outputs, encoder_hidden, greedy=False, beam_width=5)
+                _, topi = decoder_outputs.topk(1)
+                translated_indices = topi.squeeze(1).tolist()
+                decoded_words = []
             
-            for idx in translated_indices[0]:
-                if idx[0] == 0 or idx[0] == 2:
-                    continue
-                elif idx[0]== eos_token:
-                    break
-                decoded_words.append(tgt_idx2word[idx[0]])
+                for idx in translated_indices[0]:
+                    if idx[0] == 0 or idx[0] == 2:
+                        continue
+                    elif idx[0]== eos_token:
+                        break
+                    decoded_words.append(tgt_idx2word[idx[0]])
             translated_text = ' '.join(decoded_words)
-            return translated_text
+            return translated_text         
             
         
         
