@@ -56,9 +56,11 @@ class Trainer:
         loss_fn (callable): The loss function to compute the loss.
         lr (float): Learning rate for the optimizer.
         n_epochs (int): Number of epochs to train the model.
+        patience (int): Number of epochs with no improvement after which training will be stopped early.
+        transformer (bool): Whether to use a transformer architecture or not.
     """
     
-    def __init__(self, encoder, decoder, loss_fn, lr, n_epochs, patience=5):
+    def __init__(self, encoder, decoder, loss_fn, lr, n_epochs, patience=5, transformer=False):
         self.encoder = encoder
         self.decoder = decoder
         self.loss_fn = loss_fn
@@ -66,6 +68,7 @@ class Trainer:
         self.n_epochs = n_epochs
         self.patience = patience
         self.device = next(encoder.parameters()).device 
+        self.transformer = transformer
 
     def train_epoch(self, dataloader, encoder_optimizer, decoder_optimizer):
         """ 
@@ -88,7 +91,10 @@ class Trainer:
 
             encoder_outputs, encoder_hidden = self.encoder(src_idx)
             decoder_outputs, _, _ = self.decoder(encoder_outputs, encoder_hidden, tgt_idx, src_idx)
-
+            if self.transformer:
+                tgt_idx = tgt_idx[:, 1:]  # Skip the first token for transformer decoder
+                padding = torch.full((tgt_idx.size(0), 1), 2, dtype=tgt_idx.dtype, device=tgt_idx.device)
+                tgt_idx = torch.cat((tgt_idx, padding), dim=1)
             loss = self.loss_fn(decoder_outputs.view(-1, decoder_outputs.size(-1)), tgt_idx.view(-1))
             loss.backward()
             encoder_optimizer.step()

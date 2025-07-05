@@ -413,7 +413,7 @@ class TransformerDecoder(nn.Module):
         """
         
         # Initialize decoder input with padding tokens
-        decoder_input = torch.full((1, self.tgt_seq_len), 2, dtype=torch.long, device=device)
+        decoder_input = torch.full((1, self.tgt_seq_len), 2, dtype=torch.long, device=encoder_output.device)
         decoder_input[0, 0] = 0  # Start token
         
         # Initialize beam with dictionaries for better clarity
@@ -481,7 +481,6 @@ class TransformerDecoder(nn.Module):
             # Fallback: return the highest scoring incomplete sequence
             best_sequence = max(sequences, key=lambda x: x['score'])
             return best_sequence['tokens']
-
 
         
 

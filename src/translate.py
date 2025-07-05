@@ -10,16 +10,22 @@ import library.nn_architectures as nn_architectures
 import library.preprocessor as preprocessor
 import torch
 
-encoder_path = "../models/bahdanau_encoder_20250628_122604_2"
-decoder_path = "../models/bahdanau_decoder_20250628_122604_2"
+encoder_path = "../models/transformer_encoder_20250705_141137_4"
+decoder_path = "../models/transformer_decoder_20250705_141137_4"
 src_language = "English"
 
+src_seq_len = 55
+tgt_seq_len = 69
 translator_class = translator.Translator(encoder_path, decoder_path)
-hidden_size = 1024
-encoder = nn_architectures.RNNEncoder(9783, hidden_size)
-decoder = nn_architectures.RNNDecoder(hidden_size, 15532, 69)
+hidden_size = 128
+encoder = nn_architectures.TransformerEncoder(9783, hidden_size, 55, num_layer=1)
+decoder = nn_architectures.TransformerDecoder(hidden_size, 15532, 69, num_layer=1)
 
 encoder, decoder = translator_class.load_models(encoder, decoder)
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+encoder = encoder.to(device)
+decoder = decoder.to(device)
+
 src_vocab = translator_class.load_vocab("../data/eng_vocab.pkl")
 tgt_vocab = translator_class.load_vocab("../data/fra_vocab.pkl")
 
@@ -36,8 +42,14 @@ src_tokenized_text = tokenizer.word_tokenize(src_standadized_text)
 
 indexer = preprocessor.Indexer()
 indexer.word2idx = src_word2idx
-src_idx = torch.tensor(indexer.text_to_indices(src_tokenized_text, verbose=False))
+src_idx = torch.tensor(indexer.text_to_indices(src_tokenized_text, verbose=False)).to(device)
 
-translated_text = translator_class.translate(src_idx, encoder, decoder, tgt_idx2word)
+# Pad src_idx to length src_seq_len
+if len(src_idx) < src_seq_len:
+    padding_length = src_seq_len - len(src_idx[0])
+    padding = torch.full((1, padding_length,), 2, dtype=torch.long).to(device)
+    src_idx = torch.cat([src_idx, padding], dim=1)
+
+translated_text = translator_class.translate(src_idx, encoder, decoder, tgt_idx2word, transformer=True)
 print(f"Translated text: {translated_text}")
 
