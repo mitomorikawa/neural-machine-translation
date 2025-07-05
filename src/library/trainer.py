@@ -39,7 +39,9 @@ class TensorLoader:
             torch.utils.data.DataLoader: DataLoader containing the source and target tensors.
         """
         dataset = torch.utils.data.TensorDataset(src_idx, tgt_idx)
-        return torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
+        # pin_memory=True keeps tensors in pinned memory for faster GPU transfer
+        pin_memory = src_idx.is_cuda
+        return torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True, pin_memory=pin_memory)
     
     
     
@@ -62,7 +64,8 @@ class Trainer:
         self.loss_fn = loss_fn
         self.lr = lr
         self.n_epochs = n_epochs
-        self.patience = patience 
+        self.patience = patience
+        self.device = next(encoder.parameters()).device 
 
     def train_epoch(self, dataloader, encoder_optimizer, decoder_optimizer):
         """ 
@@ -78,6 +81,8 @@ class Trainer:
         self.decoder.train()
         total_loss = 0.0
         for src_idx, tgt_idx in tqdm(dataloader, desc="Training Epoch", leave=False):
+            src_idx = src_idx.to(self.device)
+            tgt_idx = tgt_idx.to(self.device)
             encoder_optimizer.zero_grad()
             decoder_optimizer.zero_grad()
 
@@ -117,6 +122,8 @@ class Trainer:
 
             with torch.no_grad():
                 for src_idx, tgt_idx in val_dataloader:
+                    src_idx = src_idx.to(self.device)
+                    tgt_idx = tgt_idx.to(self.device)
                     encoder_outputs, encoder_hidden = self.encoder(src_idx)
                     decoder_outputs, _, _ = self.decoder(encoder_outputs, encoder_hidden, tgt_idx, src_idx)
                     loss = self.loss_fn(decoder_outputs.view(-1, decoder_outputs.size(-1)), tgt_idx.view(-1))

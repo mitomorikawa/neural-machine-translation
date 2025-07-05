@@ -22,8 +22,8 @@ output_size = 15532
 batch_size = 128
 src_seq_len = 55  # Maximum source sequence length
 tgt_seq_len = 69  # Maximum target sequence length
-encoder = nn_architectures.TransformerEncoder(input_size, hidden_size, src_seq_len, num_layer=1)
-decoder = nn_architectures.TransformerDecoder(hidden_size, output_size, tgt_seq_len, num_layer=1)
+encoder = nn_architectures.TransformerEncoder(input_size, hidden_size, src_seq_len, num_layer=1).to(device)
+decoder = nn_architectures.TransformerDecoder(hidden_size, output_size, tgt_seq_len, num_layer=1).to(device)
 
 train_instance = trainer.Trainer(
     encoder=encoder,
