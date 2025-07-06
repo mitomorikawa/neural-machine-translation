@@ -16,24 +16,24 @@ src_train = loader.load("../data/eng_train.pt", device=device)
 tgt_train = loader.load("../data/fra_train.pt", device=device)
 src_val = loader.load("../data/eng_val.pt", device=device)
 tgt_val = loader.load("../data/fra_val.pt", device=device)
-hidden_size = 128
+hidden_size = 256
 input_size = 9783
 output_size = 15532
 batch_size = 128
 src_seq_len = 55  # Maximum source sequence length
 tgt_seq_len = 69  # Maximum target sequence length
-encoder = nn_architectures.TransformerEncoder(input_size, hidden_size, src_seq_len, num_layer=1).to(device)
-decoder = nn_architectures.TransformerDecoder(hidden_size, output_size, tgt_seq_len, num_layer=1).to(device)
+encoder = nn_architectures.TransformerEncoder(input_size, hidden_size, src_seq_len, num_layer=6).to(device)
+decoder = nn_architectures.TransformerDecoder(hidden_size, output_size, tgt_seq_len, num_layer=6).to(device)
 
 train_instance = trainer.Trainer(
     encoder=encoder,
     decoder=decoder,
     loss_fn=torch.nn.CrossEntropyLoss(ignore_index=2),
-    lr=0.001,  # This will be overridden by scheduler
+    lr=0.0001,  # Lower base learning rate
     n_epochs=100,
     transformer=True,
     d_model=hidden_size,  # Using hidden_size as d_model
-    warmup_steps=4000  # Default from paper
+    warmup_steps=2000  # Reduced warmup for smaller model
 )
 
 train_dataloader = loader.create_dataloader(src_train, tgt_train, batch_size=batch_size)

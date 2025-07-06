@@ -278,7 +278,11 @@ class TransformerEncoder(nn.Module):
         self.embedding = nn.Embedding(input_size, hidden_size, padding_idx=2)
         self.dropout = nn.Dropout(dropout_p)
         self.num_layer = num_layer
+        self.hidden_size = hidden_size
         self.encoderlayers = nn.ModuleList([TransformerEncoderLayer(src_seq_len, hidden_size, heads) for _ in range(num_layer)])
+        
+        # Initialize weights
+        self._init_weights()
         
     def forward(self, encoder_input):
         """
@@ -294,10 +298,17 @@ class TransformerEncoder(nn.Module):
         padding_mask = padding_mask.expand(-1, self.encoderlayers[0].attention.heads, encoder_input.size(1), -1)  # (batch_size, heads, seq_len, seq_len)
         padding_mask = padding_mask.float().masked_fill(padding_mask, float('-inf'))
 
-        embedding = self.dropout(self.embedding(encoder_input))
+        embedding = self.embedding(encoder_input)
+        # Scale embeddings by sqrt(d_model) as in the paper
+        embedding = embedding * (self.hidden_size ** 0.5)
+        embedding = self.dropout(embedding)
         for i in range(self.num_layer):
             embedding = self.encoderlayers[i](embedding, padding_mask)
         return embedding,0
+    
+    def _init_weights(self):
+        # Initialize embeddings with smaller std
+        nn.init.normal_(self.embedding.weight, mean=0.0, std=self.hidden_size ** -0.5)
     
 class TransformerDecoderLayer(nn.Module):
     """ 
@@ -364,9 +375,13 @@ class TransformerDecoder(nn.Module):
         self.embedding = nn.Embedding(output_size, hidden_size, padding_idx=2)
         self.dropout = nn.Dropout(dropout_p)
         self.num_layer = num_layer
+        self.hidden_size = hidden_size
         self.decoderlayers = nn.ModuleList([TransformerDecoderLayer(tgt_seq_len, hidden_size, heads=heads) for _ in range(num_layer)])
         self.output = nn.Linear(hidden_size, output_size)
         self.tgt_seq_len = tgt_seq_len
+        
+        # Initialize weights
+        self._init_weights()
 
     def forward(self, encoder_outputs, encoder_hidden, decoder_input, encoder_input=None, greedy=True, beam_width=5):
         """ 
@@ -394,12 +409,22 @@ class TransformerDecoder(nn.Module):
         else:
             cross_padding_mask = None
         
-        embedding = self.dropout(self.embedding(decoder_input))
+        embedding = self.embedding(decoder_input)
+        # Scale embeddings by sqrt(d_model) as in the paper
+        embedding = embedding * (self.hidden_size ** 0.5)
+        embedding = self.dropout(embedding)
         for i in range(self.num_layer):
             embedding = self.decoderlayers[i](embedding, encoder_outputs, self_padding_mask, cross_padding_mask)
         output = self.output(embedding)
         output = F.log_softmax(output, dim=-1)
         return output, 0,0
+    
+    def _init_weights(self):
+        # Initialize embeddings with smaller std
+        nn.init.normal_(self.embedding.weight, mean=0.0, std=self.hidden_size ** -0.5)
+        # Initialize output projection
+        nn.init.xavier_uniform_(self.output.weight)
+        nn.init.constant_(self.output.bias, 0.0)
     
     def infer(self, encoder_input, encoder_output, beam_width=5):
         """

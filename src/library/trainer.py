@@ -121,10 +121,13 @@ class Trainer:
             encoder_outputs, encoder_hidden = self.encoder(src_idx)
             decoder_outputs, _, _ = self.decoder(encoder_outputs, encoder_hidden, tgt_idx, src_idx)
             if self.transformer:
-                tgt_idx = tgt_idx[:, 1:]  # Skip the first token for transformer decoder
-                padding = torch.full((tgt_idx.size(0), 1), 2, dtype=tgt_idx.dtype, device=tgt_idx.device)
-                tgt_idx = torch.cat((tgt_idx, padding), dim=1)
-            loss = self.loss_fn(decoder_outputs.view(-1, decoder_outputs.size(-1)), tgt_idx.view(-1))
+                # For transformer: decoder predicts next token, so we compare outputs with shifted targets
+                # decoder_outputs[:, i] should predict tgt_idx[:, i+1]
+                target = tgt_idx[:, 1:]  # Remove <sos> token from targets
+                decoder_outputs = decoder_outputs[:, :-1]  # Remove last prediction
+            else:
+                target = tgt_idx
+            loss = self.loss_fn(decoder_outputs.reshape(-1, decoder_outputs.size(-1)), target.reshape(-1))
             loss.backward()
             torch.nn.utils.clip_grad_norm_(self.encoder.parameters(), max_norm=1.0)
             torch.nn.utils.clip_grad_norm_(self.decoder.parameters(), max_norm=1.0)
@@ -180,7 +183,13 @@ class Trainer:
                     tgt_idx = tgt_idx.to(self.device)
                     encoder_outputs, encoder_hidden = self.encoder(src_idx)
                     decoder_outputs, _, _ = self.decoder(encoder_outputs, encoder_hidden, tgt_idx, src_idx)
-                    loss = self.loss_fn(decoder_outputs.view(-1, decoder_outputs.size(-1)), tgt_idx.view(-1))
+                    if self.transformer:
+                        # For transformer: decoder predicts next token, so we compare outputs with shifted targets
+                        target = tgt_idx[:, 1:]  # Remove <sos> token from targets
+                        decoder_outputs = decoder_outputs[:, :-1]  # Remove last prediction
+                    else:
+                        target = tgt_idx
+                    loss = self.loss_fn(decoder_outputs.reshape(-1, decoder_outputs.size(-1)), target.reshape(-1))
                     epoch_val_total_loss += loss.item()
             elapsed = time.time() - start
             h, rem = divmod(elapsed, 3600)
