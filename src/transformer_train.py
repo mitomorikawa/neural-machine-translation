@@ -22,8 +22,8 @@ output_size = 15532
 batch_size = 128
 src_seq_len = 55  # Maximum source sequence length
 tgt_seq_len = 69  # Maximum target sequence length
-encoder = nn_architectures.TransformerEncoder(input_size, hidden_size, src_seq_len, num_layer=6).to(device)
-decoder = nn_architectures.TransformerDecoder(hidden_size, output_size, tgt_seq_len, num_layer=6).to(device)
+encoder = nn_architectures.TransformerEncoder(input_size, hidden_size, src_seq_len, num_layer=6, relposenc=False).to(device)
+decoder = nn_architectures.TransformerDecoder(hidden_size, output_size, tgt_seq_len, num_layer=6, relposenc=False).to(device)
 
 train_instance = trainer.Trainer(
     encoder=encoder,
@@ -36,6 +36,6 @@ train_instance = trainer.Trainer(
     warmup_steps=2000  # Reduced warmup for smaller model
 )
 
-train_dataloader = loader.create_dataloader(src_train, tgt_train, batch_size=batch_size, relposenc=False)
-val_dataloader = loader.create_dataloader(src_val, tgt_val, batch_size=batch_size, relposenc=False)
+train_dataloader = loader.create_dataloader(src_train, tgt_train, batch_size=batch_size)
+val_dataloader = loader.create_dataloader(src_val, tgt_val, batch_size=batch_size)
 train_instance.train(train_dataloader, val_dataloader, encoder_name="transformer_encoder", decoder_name="transformer_decoder")

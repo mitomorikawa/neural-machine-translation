@@ -278,7 +278,7 @@ class TransformerEncoderLayer(nn.Module):
         relu (nn.ReLU): Activation function.
         linear2 (nn.Linear): Second linear layer in the feedforward network.
     """
-    def __init__(self, src_seq_len, hidden_size, heads, relposenc):
+    def __init__(self, src_seq_len, hidden_size, heads, relposenc, dropout_p=0.1):
         super(TransformerEncoderLayer, self).__init__()
         self.attention = TransformerAttention(src_seq_len, hidden_size, heads=heads, relposenc=relposenc)
         self.layerNorm1 = nn.LayerNorm(hidden_size)
@@ -286,6 +286,8 @@ class TransformerEncoderLayer(nn.Module):
         self.linear1 = nn.Linear(hidden_size, 4*hidden_size)
         self.relu = nn.ReLU()
         self.linear2 = nn.Linear(4*hidden_size, hidden_size)
+        self.dropout1 = nn.Dropout(dropout_p)
+        self.dropout2 = nn.Dropout(dropout_p)
 
     def forward(self, encoder_layer_input, padding_mask=None):
         """
@@ -299,11 +301,13 @@ class TransformerEncoderLayer(nn.Module):
 
         # Multihead attention
         attention_output = self.attention(encoder_layer_input, encoder_layer_input, encoder_layer_input, padding_mask)
-        # Layernorm and add
+        attention_output = self.dropout1(attention_output)
+        # Layernorm and add. 
         attention_output = self.layerNorm1(attention_output + encoder_layer_input)
         # Feedforward network
         ff_output = self.linear2(self.relu(self.linear1(attention_output)))
-        # Layernorm and add
+        ff_output = self.dropout2(ff_output)
+        # Layernorm and add. Ciyld add dropout here
         output = self.layerNorm2(ff_output + attention_output)
         return output
     
@@ -373,7 +377,7 @@ class TransformerDecoderLayer(nn.Module):
         relu (nn.ReLU): Activation function.
         linear2 (nn.Linear): Second linear layer in the feedforward network.
     """
-    def __init__(self, tgt_seq_len, hidden_size, heads, relposenc):
+    def __init__(self, tgt_seq_len, hidden_size, heads, relposenc, dropout_p=0.1):
         super(TransformerDecoderLayer, self).__init__()
         self.attention1 = TransformerAttention(tgt_seq_len, hidden_size, heads=heads, mask=True, relposenc=relposenc)
         self.attention2 = TransformerAttention(tgt_seq_len, hidden_size, heads=heads, cross_attention=True,relposenc=relposenc)
@@ -383,6 +387,10 @@ class TransformerDecoderLayer(nn.Module):
         self.linear1 = nn.Linear(hidden_size, 4*hidden_size)
         self.relu = nn.ReLU()
         self.linear2 = nn.Linear(4*hidden_size, hidden_size)
+        self.dropout1 = nn.Dropout(dropout_p)
+        self.dropout2 = nn.Dropout(dropout_p)
+        self.dropout3 = nn.Dropout(dropout_p)
+
         
     def forward(self, decoder_layer_input, encoder_output, self_padding_mask=None, cross_padding_mask=None):
         """
@@ -397,14 +405,17 @@ class TransformerDecoderLayer(nn.Module):
         """
         # Masked multihead attention
         attention1_output = self.attention1(decoder_layer_input, decoder_layer_input, decoder_layer_input, self_padding_mask)
+        attention1_output = self.dropout1(attention1_output)
         # Add and Layer Normalisation
         attention1_output = self.layerNorm1(attention1_output + decoder_layer_input)
         # Cross attention (no mask needed)
         attention2_output = self.attention2(attention1_output, encoder_output, encoder_output, cross_padding_mask)
+        attention2_output = self.dropout2(attention2_output)
         # Add and Layer Normalisation
         attention2_output = self.layerNorm2(attention2_output + attention1_output)
         # Feedforward network
         ff_output = self.linear2(self.relu(self.linear1(attention2_output)))
+        ff_output = self.dropout3(ff_output)
         # Add and Layer Normalisation
         output = self.layerNorm3(ff_output + attention2_output)
         return output
@@ -513,7 +524,7 @@ class TransformerDecoder(nn.Module):
             
             # Stop if we hit EOS token
             if next_token == 1:  # EOS token
-                break
+                print("<EOS>")
         
         # Return the result
         return decoder_input
