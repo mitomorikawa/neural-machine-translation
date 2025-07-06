@@ -412,17 +412,12 @@ class TransformerDecoder(nn.Module):
             torch.Tensor: Decoded output tensor of shape (1, seq_len).
         """
         
-        # Initialize decoder input with padding tokens
-        decoder_input = torch.full((1, self.tgt_seq_len), 2, dtype=torch.long, device=encoder_output.device)
-        decoder_input[0, 0] = 0  # Start token
-        
-        # Initialize beam with dictionaries for better clarity
+        # Initialize beam with just the start token
         sequences = []
         for _ in range(beam_width):
             sequences.append({
-                'tokens': decoder_input.clone(),
-                'score': 0.0,
-                'length': 1  # Track actual sequence length
+                'tokens': [0],  # Start with SOS token
+                'score': 0.0
             })
         
         complete_sequences = []
@@ -431,29 +426,31 @@ class TransformerDecoder(nn.Module):
             all_candidates = []
             
             for seq in sequences:
-                # Get predictions for current sequence
-                decoder_output, _, _ = self.forward(encoder_output, 0, seq['tokens'], encoder_input)
+                # Skip if sequence already ended
+                if seq['tokens'][-1] == 1:  # EOS token
+                    complete_sequences.append(seq)
+                    continue
                 
-                # Get top k predictions at current position
-                topk_scores, topk_indices = decoder_output[0, i, :].topk(beam_width)
+                # Create decoder input from current sequence
+                current_length = len(seq['tokens'])
+                decoder_input = torch.full((1, self.tgt_seq_len), 2, dtype=torch.long, device=encoder_output.device)
+                decoder_input[0, :current_length] = torch.tensor(seq['tokens'], device=encoder_output.device)
+                
+                # Get predictions for current sequence
+                decoder_output, _, _ = self.forward(encoder_output, 0, decoder_input, encoder_input)
+                
+                # Get top k predictions at the LAST generated position
+                topk_scores, topk_indices = decoder_output[0, current_length - 1, :].topk(beam_width)
                 
                 for k in range(beam_width):
-                    # Skip if we're extending a completed sequence
-                    if seq['tokens'][0, seq['length'] - 1] == 1:  # EOS token
-                        continue
-                        
                     # Create new candidate
                     candidate = {
-                        'tokens': seq['tokens'].clone(),
-                        'score': seq['score'] + topk_scores[k].item(),
-                        'length': seq['length'] + 1
+                        'tokens': seq['tokens'] + [topk_indices[k].item()],
+                        'score': seq['score'] + topk_scores[k].item()
                     }
-                    candidate['tokens'][0, i + 1] = topk_indices[k]
                     
                     # Check if this candidate ends with EOS
                     if topk_indices[k] == 1:  # EOS token
-                        # Apply length normalization
-                        candidate['normalized_score'] = candidate['score'] / candidate['length']
                         complete_sequences.append(candidate)
                     else:
                         all_candidates.append(candidate)
@@ -469,18 +466,20 @@ class TransformerDecoder(nn.Module):
                 break
         
         # Add any remaining sequences as complete
-        for seq in sequences:
-            seq['normalized_score'] = seq['score'] / seq['length']
-            complete_sequences.append(seq)
+        complete_sequences.extend(sequences)
         
-        # Return the best sequence
+        # Return the best sequence with length normalization
         if complete_sequences:
-            best_sequence = max(complete_sequences, key=lambda x: x['normalized_score'])
-            return best_sequence['tokens']
+            best_sequence = max(complete_sequences, key=lambda x: x['score'] / len(x['tokens']))
+            # Convert to tensor format
+            result = torch.full((1, self.tgt_seq_len), 2, dtype=torch.long, device=encoder_output.device)
+            result[0, :len(best_sequence['tokens'])] = torch.tensor(best_sequence['tokens'], device=encoder_output.device)
+            return result
         else:
-            # Fallback: return the highest scoring incomplete sequence
-            best_sequence = max(sequences, key=lambda x: x['score'])
-            return best_sequence['tokens']
+            # Fallback: return empty sequence
+            result = torch.full((1, self.tgt_seq_len), 2, dtype=torch.long, device=encoder_output.device)
+            result[0, 0] = 0  # SOS token
+            return result
 
         
 

@@ -29,8 +29,11 @@ train_instance = trainer.Trainer(
     encoder=encoder,
     decoder=decoder,
     loss_fn=torch.nn.CrossEntropyLoss(ignore_index=2),
-    lr=0.001,
-    n_epochs=100
+    lr=0.001,  # This will be overridden by scheduler
+    n_epochs=100,
+    transformer=True,
+    d_model=hidden_size,  # Using hidden_size as d_model
+    warmup_steps=4000  # Default from paper
 )
 
 train_dataloader = loader.create_dataloader(src_train, tgt_train, batch_size=batch_size)
