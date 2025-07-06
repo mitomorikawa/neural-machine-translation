@@ -10,8 +10,8 @@ import library.nn_architectures as nn_architectures
 import library.preprocessor as preprocessor
 import torch
 
-encoder_path = "../models/transformer_encoder_20250706_094437_1"
-decoder_path = "../models/transformer_decoder_20250706_094437_1"
+encoder_path = "../models/transformer_encoder_20250706_112705_1"
+decoder_path = "../models/transformer_decoder_20250706_112706_1"
 src_language = "English"
 
 src_seq_len = 55
