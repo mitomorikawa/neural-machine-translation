@@ -64,7 +64,7 @@ class Translator:
         with torch.no_grad():
             encoder_outputs, encoder_hidden = encoder(src_idx)
             if transformer:
-                decoder_outputs = decoder.infer(src_idx, encoder_outputs)
+                decoder_outputs = decoder.infer_greedy(src_idx, encoder_outputs)
                 translated_indices = decoder_outputs.squeeze(0).tolist()
                 decoded_words = []
                         # For transformer, translated_indices is a 1D list of token IDs

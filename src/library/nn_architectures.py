@@ -168,7 +168,12 @@ class TransformerAttention(nn.Module):
         self.mask = mask
         self.cross_attention = cross_attention
         self.query_seq_len = query_seq_len
-        self.positional_embedding = torch.nn.Parameter(torch.randn(2*query_seq_len - 1, self.head_dim))
+        # Relative position embeddings: max_relative_position * 2 + 1 (for negative, zero, and positive positions)
+        max_relative_position = query_seq_len - 1
+        self.relative_positions_num = 2 * max_relative_position + 1
+        self.positional_embedding = torch.nn.Parameter(torch.zeros(self.relative_positions_num, self.head_dim))
+        # Initialize with Xavier/Glorot uniform
+        nn.init.xavier_uniform_(self.positional_embedding, gain=1.0)
         
     def forward(self, query, key, value, padding_mask=None):
         """
@@ -205,24 +210,37 @@ class TransformerAttention(nn.Module):
         attention_output = self.Wo(attention_output)
         return attention_output
 
-    def relativePositionalEncoding(self, matrix): 
+    def relativePositionalEncoding(self, query): 
         """ 
-        Multiply the matrix with a relative positional encoding matrix.
+        Compute relative positional encoding for self-attention.
 
         Args:
-            matrix (torch.Tensor): Input tensor of shape (batch_size, heads, sentence_len, head_dim).
+            query (torch.Tensor): Query tensor of shape (batch_size, heads, seq_len, head_dim).
         returns:
-            torch.Tensor: Tensor with relative positional encoding applied. Shape (batch_size, heads, sentence_len, sentence_len).
+            torch.Tensor: Relative position bias of shape (batch_size, heads, seq_len, seq_len).
         """
-        batch_size = matrix.shape[0]
+        batch_size, n_heads, seq_len, d_head = query.shape
         
-        posenc = torch.einsum('b h i d, j d -> b h i j', matrix, self.positional_embedding)
-        posenc = torch.cat([posenc, torch.zeros((batch_size, self.heads, self.query_seq_len, 1), device=matrix.device)], dim=-1)
-        posenc = posenc.flatten(start_dim=-2)
-        posenc = torch.cat([posenc, torch.zeros((batch_size, self.heads, self.query_seq_len-1), device=matrix.device)], dim=-1)
-        posenc = posenc.reshape(batch_size, self.heads, self.query_seq_len+1, 2*self.query_seq_len-1)
-        posenc = posenc[:, :, :-1, -self.query_seq_len:]
-        return posenc
+        # Create relative position matrix
+        # relative_positions[i, j] = j - i (position of key relative to query)
+        positions = torch.arange(seq_len, device=query.device)
+        relative_positions = positions.unsqueeze(0) - positions.unsqueeze(1)  # (seq_len, seq_len)
+        
+        # Clip relative positions to max range and shift to positive indices
+        max_relative_position = self.query_seq_len - 1
+        relative_positions = relative_positions.clamp(-max_relative_position, max_relative_position)
+        relative_positions = relative_positions + max_relative_position  # shift to [0, 2*max_relative_position]
+        
+        # Get embeddings for each relative position
+        rel_embeddings = self.positional_embedding[relative_positions]  # (seq_len, seq_len, head_dim)
+        
+        # Compute attention bias: query @ relative_position_embeddings
+        # query: (batch_size, heads, seq_len, head_dim)
+        # rel_embeddings: (seq_len, seq_len, head_dim)
+        # result: (batch_size, heads, seq_len, seq_len)
+        attention_bias = torch.einsum('bhqd,qkd->bhqk', query, rel_embeddings)
+        
+        return attention_bias
     
 class TransformerEncoderLayer(nn.Module):
     """ 
@@ -426,6 +444,43 @@ class TransformerDecoder(nn.Module):
         nn.init.xavier_uniform_(self.output.weight)
         nn.init.constant_(self.output.bias, 0.0)
     
+    def infer_greedy(self, encoder_input, encoder_output):
+        """
+        Greedy decoding for inference.
+        
+        Args:
+            encoder_input (torch.Tensor): Encoder input tensor of shape (1, seq_len).
+            encoder_output (torch.Tensor): Encoder output tensor of shape (1, seq_len, hidden_size).
+        
+        Returns:
+            torch.Tensor: Decoded output tensor of shape (1, seq_len).
+        """
+        # Initialize with SOS token
+        tokens = [0]
+        
+        # Create decoder input filled with padding
+        decoder_input = torch.full((1, self.tgt_seq_len), 2, dtype=torch.long, device=encoder_output.device)
+        decoder_input[0, 0] = 0  # SOS token
+        
+        for i in range(1, self.tgt_seq_len):
+            # Get predictions
+            decoder_output, _, _ = self.forward(encoder_output, 0, decoder_input, encoder_input)
+            
+            # The decoder output at position i-1 predicts the token at position i
+            # So to get the prediction for position i, we look at output from position i-1
+            next_token = decoder_output[0, i-1, :].argmax().item()
+            
+            # Add to sequence
+            tokens.append(next_token)
+            decoder_input[0, i] = next_token
+            
+            # Stop if we hit EOS token
+            if next_token == 1:  # EOS token
+                break
+        
+        # Return the result
+        return decoder_input
+    
     def infer(self, encoder_input, encoder_output, beam_width=5):
         """
         Args:
@@ -464,8 +519,11 @@ class TransformerDecoder(nn.Module):
                 # Get predictions for current sequence
                 decoder_output, _, _ = self.forward(encoder_output, 0, decoder_input, encoder_input)
                 
-                # Get top k predictions at the LAST generated position
-                topk_scores, topk_indices = decoder_output[0, current_length - 1, :].topk(beam_width)
+                # Get top k predictions at the current position (where next token should be generated)
+                # Make sure we don't go out of bounds
+                if current_length >= self.tgt_seq_len:
+                    continue  # Skip if sequence is already at max length
+                topk_scores, topk_indices = decoder_output[0, current_length, :].topk(beam_width)
                 
                 for k in range(beam_width):
                     # Create new candidate
