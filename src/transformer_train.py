@@ -36,6 +36,6 @@ train_instance = trainer.Trainer(
     warmup_steps=2000  # Reduced warmup for smaller model
 )
 
-train_dataloader = loader.create_dataloader(src_train, tgt_train, batch_size=batch_size)
-val_dataloader = loader.create_dataloader(src_val, tgt_val, batch_size=batch_size)
+train_dataloader = loader.create_dataloader(src_train, tgt_train, batch_size=batch_size, relposenc=False)
+val_dataloader = loader.create_dataloader(src_val, tgt_val, batch_size=batch_size, relposenc=False)
 train_instance.train(train_dataloader, val_dataloader, encoder_name="transformer_encoder", decoder_name="transformer_decoder")

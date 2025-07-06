@@ -166,14 +166,16 @@ def absolutePositionalEncoding(batch_size, seq_len, hidden_size):
     Returns:
         torch.Tensor: Positional encoding tensor of shape (batch_size, seq_len, hidden_size).
     """
-    pe = torch.zeros(( seq_len, hidden_size)) # (seq_len, hidden_size)
-
-    for k in torch.arange(seq_len):
-        for i in torch.arange(hidden_size//2):
-            theta = k/(10000**((2*i)/hidden_size))
-            pe[k, 2*i] = torch.sin(theta)
-            pe[k, 2*i+1] = torch.cos(theta)
-    pe = pe.unsqueeze(0).expand(batch_size, -1, -1)  # (batch_size, seq_len, hidden_size)
+    pe = torch.zeros(seq_len, hidden_size)
+    position = torch.arange(seq_len, dtype=torch.float).unsqueeze(1)  # (seq_len, 1)
+    div_term = torch.exp(torch.arange(0, hidden_size, 2, dtype=torch.float) * -(torch.log(torch.tensor(10000.0)) / hidden_size))  # (hidden_size // 2)
+    pe[:, 0::2] = torch.sin(position * div_term)  # even indices
+    if hidden_size % 2 == 0:
+        pe[:, 1::2] = torch.cos(position * div_term)  # odd indices
+    else:
+        pe[:, 1::2] = torch.cos(position * div_term[:-1])  # handle odd hidden_size
+    # Expand to batch size
+    pe = pe.unsqueeze(0).expand(batch_size, -1, -1)
     return pe.to(device)
     
     
