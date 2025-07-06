@@ -154,8 +154,31 @@ class RNNDecoder(nn.Module):
 
         return output, hidden, attn_weights
     
+def absolutePositionalEncoding(batch_size, seq_len, hidden_size):
+    """
+    Generate absolute positional encoding for a sequence.
+    
+    Args:
+        batch_size (int): Size of the batch.
+        seq_len (int): Length of the sequence.
+        hidden_size (int): Size of the hidden layer.
+        
+    Returns:
+        torch.Tensor: Positional encoding tensor of shape (batch_size, seq_len, hidden_size).
+    """
+    pe = torch.zeros(( seq_len, hidden_size)) # (seq_len, hidden_size)
+
+    for k in torch.arange(seq_len):
+        for i in torch.arange(hidden_size//2):
+            theta = k/(10000**((2*i)/hidden_size))
+            pe[k, 2*i] = torch.sin(theta)
+            pe[k, 2*i+1] = torch.cos(theta)
+    pe = pe.unsqueeze(0).expand(batch_size, -1, -1)  # (batch_size, seq_len, hidden_size)
+    return pe.to(device)
+    
+    
 class TransformerAttention(nn.Module):
-    def __init__(self, query_seq_len, hidden_size, heads=8, mask=False, cross_attention=False):
+    def __init__(self, query_seq_len, hidden_size, heads=8, mask=False, cross_attention=False, relposenc=True):
         super(TransformerAttention, self).__init__()
         self.Wq = nn.Linear(hidden_size, hidden_size)
         self.Wk = nn.Linear(hidden_size, hidden_size)
@@ -174,6 +197,7 @@ class TransformerAttention(nn.Module):
         self.positional_embedding = torch.nn.Parameter(torch.zeros(self.relative_positions_num, self.head_dim))
         # Initialize with Xavier/Glorot uniform
         nn.init.xavier_uniform_(self.positional_embedding, gain=1.0)
+        self.relposenc= relposenc
         
     def forward(self, query, key, value, padding_mask=None):
         """
@@ -196,7 +220,7 @@ class TransformerAttention(nn.Module):
         query /= (self.head_dim ** 0.5)
         attention = torch.einsum('b h i d, b h j d -> b h i j', query, key)
 
-        if not self.cross_attention:
+        if (not self.cross_attention) and self.relposenc:
             positional_query = self.relativePositionalEncoding(query)
             attention += positional_query
         if self.mask:
@@ -252,9 +276,9 @@ class TransformerEncoderLayer(nn.Module):
         relu (nn.ReLU): Activation function.
         linear2 (nn.Linear): Second linear layer in the feedforward network.
     """
-    def __init__(self, src_seq_len, hidden_size, heads):
+    def __init__(self, src_seq_len, hidden_size, heads, relposenc):
         super(TransformerEncoderLayer, self).__init__()
-        self.attention = TransformerAttention(src_seq_len, hidden_size, heads=heads)
+        self.attention = TransformerAttention(src_seq_len, hidden_size, heads=heads, relposenc=relposenc)
         self.layerNorm1 = nn.LayerNorm(hidden_size)
         self.layerNorm2 = nn.LayerNorm(hidden_size)
         self.linear1 = nn.Linear(hidden_size, 4*hidden_size)
@@ -291,14 +315,15 @@ class TransformerEncoder(nn.Module):
             - num_layer (int): Number of transformer encoder layers.
             - dropout_p (float): Dropout probability.
         """
-    def __init__(self, input_size, hidden_size, src_seq_len, heads=8, num_layer=6, dropout_p=0.1):
+    def __init__(self, input_size, hidden_size, src_seq_len, heads=8, num_layer=6, dropout_p=0.1, relposenc=True):
         super(TransformerEncoder, self).__init__()
         self.embedding = nn.Embedding(input_size, hidden_size, padding_idx=2)
         self.dropout = nn.Dropout(dropout_p)
         self.num_layer = num_layer
         self.hidden_size = hidden_size
-        self.encoderlayers = nn.ModuleList([TransformerEncoderLayer(src_seq_len, hidden_size, heads) for _ in range(num_layer)])
-        
+        self.src_seq_len = src_seq_len
+        self.encoderlayers = nn.ModuleList([TransformerEncoderLayer(src_seq_len, hidden_size, heads, relposenc) for _ in range(num_layer)])
+        self.relposenc = relposenc
         # Initialize weights
         self._init_weights()
         
@@ -320,6 +345,11 @@ class TransformerEncoder(nn.Module):
         # Scale embeddings by sqrt(d_model) as in the paper
         embedding = embedding * (self.hidden_size ** 0.5)
         embedding = self.dropout(embedding)
+        batch_size = embedding.size(0)
+        if not self.relposenc:
+            # If relative positional encoding is not used, create absolute positional encoding
+            pos_encoding = absolutePositionalEncoding(batch_size, self.src_seq_len, self.hidden_size)
+            embedding += pos_encoding# Add absolute positional encoding
         for i in range(self.num_layer):
             embedding = self.encoderlayers[i](embedding, padding_mask)
         return embedding,0
@@ -341,10 +371,10 @@ class TransformerDecoderLayer(nn.Module):
         relu (nn.ReLU): Activation function.
         linear2 (nn.Linear): Second linear layer in the feedforward network.
     """
-    def __init__(self, tgt_seq_len, hidden_size, heads):
+    def __init__(self, tgt_seq_len, hidden_size, heads, relposenc):
         super(TransformerDecoderLayer, self).__init__()
-        self.attention1 = TransformerAttention(tgt_seq_len, hidden_size, heads=heads, mask=True)
-        self.attention2 = TransformerAttention(tgt_seq_len, hidden_size, heads=heads, cross_attention=True)
+        self.attention1 = TransformerAttention(tgt_seq_len, hidden_size, heads=heads, mask=True, relposenc=relposenc)
+        self.attention2 = TransformerAttention(tgt_seq_len, hidden_size, heads=heads, cross_attention=True,relposenc=relposenc)
         self.layerNorm1 = nn.LayerNorm(hidden_size)
         self.layerNorm2 = nn.LayerNorm(hidden_size)
         self.layerNorm3 = nn.LayerNorm(hidden_size)
@@ -388,16 +418,16 @@ class TransformerDecoder(nn.Module):
         - dropout_p (float): Dropout probability.
 
     """
-    def __init__(self, hidden_size, output_size, tgt_seq_len, heads=8, num_layer=6, dropout_p=0.1):
+    def __init__(self, hidden_size, output_size, tgt_seq_len, heads=8, num_layer=6, dropout_p=0.1, relposenc=True): 
         super(TransformerDecoder, self).__init__()
         self.embedding = nn.Embedding(output_size, hidden_size, padding_idx=2)
         self.dropout = nn.Dropout(dropout_p)
         self.num_layer = num_layer
         self.hidden_size = hidden_size
-        self.decoderlayers = nn.ModuleList([TransformerDecoderLayer(tgt_seq_len, hidden_size, heads=heads) for _ in range(num_layer)])
+        self.decoderlayers = nn.ModuleList([TransformerDecoderLayer(tgt_seq_len, hidden_size, heads=heads, relposenc=relposenc) for _ in range(num_layer)])
         self.output = nn.Linear(hidden_size, output_size)
         self.tgt_seq_len = tgt_seq_len
-        
+        self.relposenc = relposenc
         # Initialize weights
         self._init_weights()
 
@@ -431,6 +461,11 @@ class TransformerDecoder(nn.Module):
         # Scale embeddings by sqrt(d_model) as in the paper
         embedding = embedding * (self.hidden_size ** 0.5)
         embedding = self.dropout(embedding)
+        batch_size = embedding.size(0)
+        if not self.relposenc:
+            # If relative positional encoding is not used, create absolute positional encoding
+            pos_encoding = absolutePositionalEncoding(batch_size, self.tgt_seq_len, self.hidden_size)
+            embedding += pos_encoding
         for i in range(self.num_layer):
             embedding = self.decoderlayers[i](embedding, encoder_outputs, self_padding_mask, cross_padding_mask)
         output = self.output(embedding)

@@ -126,8 +126,8 @@ def test_TransformerPaddingMask():
     decoder_input[1:, -2:] = 2  # Last 2 tokens are padding
     decoder_input[0, -5:] = 2  # Last token is padding for the first sequence
     
-    encoder = nn_architectures.TransformerEncoder(vocab_size, hidden_size, seq_len, heads=num_heads, num_layer=2)
-    decoder = nn_architectures.TransformerDecoder(hidden_size, output_size, tgt_seq_len, heads=num_heads, num_layer=2)
+    encoder = nn_architectures.TransformerEncoder(vocab_size, hidden_size, seq_len, heads=num_heads, num_layer=2, relposenc=False)
+    decoder = nn_architectures.TransformerDecoder(hidden_size, output_size, tgt_seq_len, heads=num_heads, num_layer=2, relposenc=False)
     
     # Forward pass through encoder
     encoder_output, _ = encoder(encoder_input)
