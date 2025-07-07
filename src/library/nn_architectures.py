@@ -87,7 +87,6 @@ class RNNDecoder(nn.Module):
                     _, topi = decoder_output.topk(1)
                     decoder_input = topi.squeeze(-1).detach()  # detach from history as input
             decoder_outputs = torch.cat(decoder_outputs, dim=1)
-            decoder_outputs = F.log_softmax(decoder_outputs, dim=-1)
             attentions = torch.cat(attentions, dim=1)
             return decoder_outputs, decoder_hidden, attentions
         
