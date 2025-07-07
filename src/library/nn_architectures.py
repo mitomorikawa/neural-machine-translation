@@ -497,7 +497,6 @@ class TransformerDecoder(nn.Module):
         # Apply final layer normalization for pre-norm architecture
         embedding = self.final_layer_norm(embedding)
         output = self.output(embedding)
-        output = F.log_softmax(output, dim=-1)
         return output, 0,0
     
     def _init_weights(self):
