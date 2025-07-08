@@ -28,13 +28,12 @@ def test_Standardizer():
     print("Standardization test passed.")
 
 def test_Tokenizer():
-    standardized_texts = ["hello world !", "j ' ai un chat .", "i ' m a student ."]
+    standardized_texts = ["hello world !", "j ' ai un chat .", "i ' m a student yeah ."]
     tokenizer = preprocessor.Tokenizer()
-    tokenized_texts = tokenizer.word_tokenize(standardized_texts)
+    tokenized_texts = tokenizer.word_tokenize(standardized_texts, 6)
     expected_tokenized_texts = [
         ["hello", "world", "!"],
         ["j", "'", "ai", "un", "chat", "."],
-        ["i", "'", "m", "a", "student", "."]
     ]
     if tokenized_texts != expected_tokenized_texts:
         raise AssertionError(f"""Tokenization did not produce the expected output.

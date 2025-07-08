@@ -6,6 +6,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
+from tqdm import tqdm
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 class RNNEncoder(nn.Module):
@@ -560,7 +561,7 @@ class TransformerDecoder(nn.Module):
             }]
         complete_sequences = []
         
-        for i in range(self.tgt_seq_len - 1):
+        for i in tqdm(range(self.tgt_seq_len - 1)):
             all_candidates = []
             
             for seq in sequences:

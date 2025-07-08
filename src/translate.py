@@ -10,8 +10,8 @@ import library.nn_architectures as nn_architectures
 import library.preprocessor as preprocessor
 import torch
 
-encoder_path = "/Users/morikawakaion/Desktop/nmt/models/transformer_encoder_20250706_230921_54"
-decoder_path = "/Users/morikawakaion/Desktop/nmt/models/transformer_decoder_20250706_230921_54"
+encoder_path = "/Users/morikawakaion/Desktop/nmt/models/transformer_encoder_20250708_091930_97"
+decoder_path = "/Users/morikawakaion/Desktop/nmt/models/transformer_decoder_20250708_091930_97"
 src_language = "English"
 
 src_seq_len = 55
@@ -38,7 +38,7 @@ standadizer = preprocessor.Standardizer()
 src_standadized_text = standadizer.standardize([src_text])
 
 tokenizer = preprocessor.Tokenizer()    
-src_tokenized_text = tokenizer.word_tokenize(src_standadized_text)
+src_tokenized_text = tokenizer.word_tokenize(src_standadized_text, src_seq_len)
 
 indexer = preprocessor.Indexer()
 indexer.word2idx = src_word2idx

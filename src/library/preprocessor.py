@@ -8,6 +8,7 @@ import unicodedata
 import re
 import torch
 from sklearn.model_selection import train_test_split
+from tqdm import tqdm
 
 class DataLoader:
     """ 
@@ -32,7 +33,8 @@ class DataLoader:
         with open(self.file_paths, 'r', encoding='utf-8') as file:
             reader = csv.reader(file)
             next(reader)  # Skip header row
-            for row in reader:
+            rows = list(reader)
+            for row in tqdm(rows, desc="Loading data"):
                 eng_texts.append(row[0])
                 fra_texts.append(row[1])
         return eng_texts, fra_texts
@@ -53,7 +55,7 @@ class Standardizer:
             List[str]: A list of standardized strings with token-friendly formatting.
         """
         standardized_texts = []
-        for text in texts:
+        for text in tqdm(texts, desc="Standardizing texts"):
             # Convert to lowercase and strip leading/trailing spaces
             standardized_text = text.lower().strip()
             
@@ -80,15 +82,17 @@ class Tokenizer:
     """ 
     This class tokenizes text into words and removes punctuation.
     """
-    def word_tokenize(self, texts):
+    def word_tokenize(self, texts, max_len):
         """ 
         Takes a list of strings and breaks them into words.
                 params:
                     - List[str]: List of texts to tokenize.
+                    - int max_len
                 returns:
                     List[List[str]] - A list of lists of tokens, where each inner list corresponds to a text.
         """
-        return [text.split() for text in texts]
+        tokenized_texts = [text.split() for text in tqdm(texts) if len(text.split()) <= max_len]
+        return tokenized_texts
     
 class Indexer:
     """ 
@@ -113,12 +117,12 @@ class Indexer:
                 returns:
                     None - The method updates the word2idx and idx2word dictionaries.
         """
-        for text in tokens:
+        for text in tqdm(tokens, desc="Counting words"):
             for word in text:
                 self.word2count[word] = self.word2count.get(word, 0) + 1
 
         # Now add only words with count >= min_freq
-        for word, count in self.word2count.items():
+        for word, count in tqdm(self.word2count.items(), desc="Building vocabulary"):
             if count >= min_freq and word not in self.word2idx:
                 self.word2idx[word] = self.vocab_size
                 self.idx2word[self.vocab_size] = word
@@ -135,7 +139,7 @@ class Indexer:
         max_length = max(len(text) for text in texts)
         if prepend_sos:
             indices = [[self.word2idx["<sos>"]]+[2 for _ in range(max_length)] for _ in range(len(texts))]  
-            for i, text in enumerate(texts):
+            for i, text in enumerate(tqdm(texts)):
                 for j, word in enumerate(text):
                     if word in self.word2idx:
                         indices[i][j+1] = self.word2idx[word]
@@ -146,7 +150,7 @@ class Indexer:
                 print("max_length:", max_length+2)
         else:
             indices = [[2 for _ in range(max_length)] for _ in range(len(texts))]
-            for i, text in enumerate(texts):
+            for i, text in enumerate(tqdm(texts)):
                 for j, word in enumerate(text):
                     if word in self.word2idx:
                         indices[i][j] = self.word2idx[word]
