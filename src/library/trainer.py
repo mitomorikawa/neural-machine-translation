@@ -63,8 +63,7 @@ class TensorLoader:
             torch.utils.data.DataLoader: DataLoader containing the source and target tensors.
         """
         dataset = torch.utils.data.TensorDataset(src_idx, tgt_idx)
-        # pin_memory=True keeps tensors in pinned memory for faster GPU transfer
-        pin_memory = src_idx.is_cuda
+
         return torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
     
     
