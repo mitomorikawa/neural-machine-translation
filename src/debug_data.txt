@@ -1,0 +1,280 @@
+English: tensor([  19,  265,  536, 1076,  117,    3, 1583,   19, 2437,  612, 2246,    5,
+           1,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2])
+sentence: i had never seen a <unk> till i visited the zoo . <eos> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
+French: tensor([   0,   30,   94,   16, 1293, 1262,  302,   91,    3, 1147,  143,   16,
+         372,   12, 3964,   19,    1,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2])
+sentence: <sos> je n ' avais jamais vu de <unk> avant d ' aller au zoo . <eos> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
+--------------------------------------------------
+English: tensor([ 136,  251,  250,  601, 1261,    9,    1,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2])
+sentence: how old is your son ? <eos> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
+French: tensor([   0, 1555, 1174,  158,   42, 2355,    9,    1,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2])
+sentence: <sos> quel âge a votre fils ? <eos> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
+--------------------------------------------------
+English: tensor([  50,   42,  214, 1428,  117,  653,  352, 1326,  245,  706,  612, 6994,
+           5,    1,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2])
+sentence: we ' re expecting a lot of people to attend the ceremony . <eos> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
+French: tensor([    0,   103,   103,  1450,    14,   417,   511,  1204,    91,   730,
+        14050,    14,   147,  5809,    19,     1,     2,     2,     2,     2,
+            2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+            2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+            2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+            2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+            2,     2,     2,     2,     2,     2,     2,     2,     2])
+sentence: <sos> nous nous attendons à ce que beaucoup de monde participe à la réunion . <eos> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
+--------------------------------------------------
+English: tensor([ 102,   42,  214,  117,  381, 1013,    5,    1,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2])
+sentence: you ' re a wonderful friend . <eos> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
+French: tensor([   0,  234,  741,  153, 4659, 1861,   19,    1,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2])
+sentence: <sos> tu es un merveilleux ami . <eos> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
+--------------------------------------------------
+English: tensor([ 125,  449,  250,   99, 1864,    5,    1,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2])
+sentence: this tea is too bitter . <eos> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
+French: tensor([   0,  417,  854,   81,  399, 3315,   19,    1,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2])
+sentence: <sos> ce thé est trop amer . <eos> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
+--------------------------------------------------
+English: tensor([817, 122,  33,   5,   1,   2,   2,   2,   2,   2,   2,   2,   2,   2,
+          2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,
+          2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,
+          2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2])
+sentence: send him in . <eos> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
+French: tensor([   0, 1467,   23,  132,    5,    1,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2])
+sentence: <sos> envoie - le ! <eos> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
+--------------------------------------------------
+English: tensor([  19,  132, 7681,  979, 2150,  574,  215, 7444, 1176,    5,    1,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2])
+sentence: i have practiced piano every day for fifteen years . <eos> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
+French: tensor([    0,    32,    16,    34,  7862,   132,  1809,  1034,   275,  3920,
+         6187, 12559,    76,    19,     1,     2,     2,     2,     2,     2,
+            2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+            2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+            2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+            2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+            2,     2,     2,     2,     2,     2,     2,     2,     2])
+sentence: <sos> j ' ai pratiqué le piano tous les jours pendant 15 ans . <eos> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
+--------------------------------------------------
+English: tensor([ 132,  102, 2841, 1878, 1736,    9,    1,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2])
+sentence: have you ever been arrested ? <eos> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
+French: tensor([   0,  424,   23,  145, 1262,  232, 4976,    9,    1,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2])
+sentence: <sos> avez - vous jamais été arrêtées ? <eos> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
+--------------------------------------------------
+English: tensor([ 578,  391,  102,  106, 1259,    9,    1,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2])
+sentence: why are you so insecure ? <eos> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
+French: tensor([   0, 1066,  138,  449,   23,  234,  262,  154,  342,   91,   24,    9,
+           1,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2])
+sentence: <sos> pourquoi te sens - tu si peu sûr de toi ? <eos> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
+--------------------------------------------------
+English: tensor([ 197,   42,   94, 1071, 1152,  352, 4221,    5,    1,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2])
+sentence: she ' s very afraid of snakes . <eos> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
+French: tensor([   0,  352,  158,  520, 1212, 4191,  437, 7061,   19,    1,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2])
+sentence: <sos> elle a une peur bleue des serpents . <eos> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
+--------------------------------------------------
+English: tensor([8933,  928,  532, 7312, 5500,    3,    5,    1,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2])
+sentence: muslims always pray facing toward <unk> . <eos> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
+French: tensor([    0,   275, 14420,     3,  1722,    85,  9956,   788,    14,   147,
+            3,    19,     1,     2,     2,     2,     2,     2,     2,     2,
+            2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+            2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+            2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+            2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+            2,     2,     2,     2,     2,     2,     2,     2,     2])
+sentence: <sos> les musulmans <unk> toujours en faisant face à la <unk> . <eos> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
+--------------------------------------------------
+English: tensor([1660,  151,   31,    5,    1,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2])
+sentence: everybody saw it . <eos> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
+French: tensor([  0, 327, 132, 730,  15,  16, 158, 302,  19,   1,   2,   2,   2,   2,
+          2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,
+          2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,
+          2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,
+          2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2])
+sentence: <sos> tout le monde l ' a vu . <eos> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
+--------------------------------------------------
+English: tensor([ 117,  692,  144, 6312,  612, 1808, 1213, 1693,    3,  215, 2993, 3187,
+           5,    1,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2])
+sentence: a dog jumped onto the chair and lay <unk> for five minutes . <eos> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
+French: tensor([   0,  153, 1280, 1020,  991,  147, 3248,  616, 4285,  646, 6187,  469,
+        5448,   19,    1,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2])
+sentence: <sos> un chien sauta sur la chaise et resta immobile pendant cinq minutes . <eos> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
+--------------------------------------------------
+English: tensor([102, 193, 446, 270,  31,   5,   1,   2,   2,   2,   2,   2,   2,   2,
+          2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,
+          2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,
+          2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2])
+sentence: you may not like it . <eos> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
+French: tensor([   0,   93, 1161, 1109,  511,  234,  162,   15,   16, 2992,   82,   19,
+           1,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2])
+sentence: <sos> il se peut que tu ne l ' aimes pas . <eos> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
+--------------------------------------------------
+English: tensor([  19,  132,  529, 4078,  117, 2792, 2134,  117, 1013, 1452,  248,  197,
+         250,  481,  245,   20,   35,  867, 1357,    5,    1,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2])
+sentence: i have just received a letter from a friend saying that she is coming to see me next week . <eos> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
+French: tensor([    0,    30,   127,    91,  3868,   520,  4830,   143,    16,   520,
+         1862, 12155,   416,    16,   352,  1697,   172,   260,   147,  2486,
+          210,    19,     1,     2,     2,     2,     2,     2,     2,     2,
+            2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+            2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+            2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+            2,     2,     2,     2,     2,     2,     2,     2,     2])
+sentence: <sos> je viens de recevoir une lettre d ' une amie disant qu ' elle vient me voir la semaine prochaine . <eos> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
+--------------------------------------------------
+English: tensor([  19,  991,  102, 1162,  521, 1013,    5,    1,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2])
+sentence: i thought you were my friend . <eos> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
+French: tensor([   0,   30, 3888,  511,  234,  528,  540, 1861,   19,    1,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2])
+sentence: <sos> je pensais que tu étais mon ami . <eos> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
+--------------------------------------------------
+English: tensor([ 125,  982,  250,  215, 2026,  869, 5482, 4325,  250,  446, 1276,    5,
+           1,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2])
+sentence: this book is for students whose native language is not japanese . <eos> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
+French: tensor([    0,   417,  1811,    81,  8977,  1173,  3589,  4063,   132,  2368,
+           94,    16,    81,    82,   147,   488, 11238,    19,     1,     2,
+            2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+            2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+            2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+            2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+            2,     2,     2,     2,     2,     2,     2,     2,     2])
+sentence: <sos> ce livre est destiné aux étudiants dont le japonais n ' est pas la langue maternelle . <eos> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
+--------------------------------------------------
+English: tensor([230, 102,  37, 196,  71, 140,   9,   1,   2,   2,   2,   2,   2,   2,
+          2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,
+          2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,
+          2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2])
+sentence: do you know what he did ? <eos> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
+French: tensor([   0, 1114,   23,  145,  417,  416,   16,   93,  158,  187,    9,    1,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2])
+sentence: <sos> savez - vous ce qu ' il a fait ? <eos> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
+--------------------------------------------------
+English: tensor([4394, 7930,  117, 1071, 1732, 2405,    5,    1,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2])
+sentence: bagpipes produce a very strange sound . <eos> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
+French: tensor([   0,  147, 7361, 4030,  153, 2805,  667, 3465,   19,    1,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2])
+sentence: <sos> la cornemuse produit un son très étrange . <eos> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
+--------------------------------------------------
+English: tensor([ 19,  42,  86,  54, 534,  67,   5,   1,   2,   2,   2,   2,   2,   2,
+          2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,
+          2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,
+          2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2])
+sentence: i ' ll be at home . <eos> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
+French: tensor([   0,   30, 1311,  150,   60,   19,    1,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,    2,
+           2,    2,    2,    2,    2,    2,    2,    2,    2])
+sentence: <sos> je serai chez moi . <eos> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad> <pad>
+--------------------------------------------------

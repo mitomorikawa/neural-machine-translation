@@ -482,7 +482,6 @@ class TransformerDecoder(nn.Module):
         for i in range(self.num_layer):
             embedding = self.decoderlayers[i](embedding, encoder_outputs, self_padding_mask, cross_padding_mask)
         output = self.output(embedding)
-        output = F.log_softmax(output, dim=-1)
         return output, 0,0
     
     def _init_weights(self):

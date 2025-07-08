@@ -16,14 +16,14 @@ src_train = loader.load("../data/eng_train.pt", device=device)
 tgt_train = loader.load("../data/fra_train.pt", device=device)
 src_val = loader.load("../data/eng_val.pt", device=device)
 tgt_val = loader.load("../data/fra_val.pt", device=device)
-hidden_size = 256
+hidden_size = 128
 input_size = 9783
 output_size = 15532
 batch_size = 128
 src_seq_len = 55  # Maximum source sequence length
 tgt_seq_len = 69  # Maximum target sequence length
-encoder = nn_architectures.TransformerEncoder(input_size, hidden_size, src_seq_len, num_layer=6, relposenc=False).to(device)
-decoder = nn_architectures.TransformerDecoder(hidden_size, output_size, tgt_seq_len, num_layer=6, relposenc=False).to(device)
+encoder = nn_architectures.TransformerEncoder(input_size, hidden_size, src_seq_len, num_layer=1, relposenc=False).to(device)
+decoder = nn_architectures.TransformerDecoder(hidden_size, output_size, tgt_seq_len, num_layer=1, relposenc=False).to(device)
 
 train_instance = trainer.Trainer(
     encoder=encoder,
