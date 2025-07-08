@@ -553,26 +553,17 @@ class TransformerDecoder(nn.Module):
         Returns:
             torch.Tensor: Decoded output tensor of shape (1, seq_len).
         """
-        
         # Initialize beam with just the start token
-        sequences = []
-        for _ in range(beam_width):
-            sequences.append({
+        sequences = [{
                 'tokens': [0],  # Start with SOS token
                 'score': 0.0
-            })
-        
+            }]
         complete_sequences = []
         
         for i in range(self.tgt_seq_len - 1):
             all_candidates = []
             
             for seq in sequences:
-                # Skip if sequence already ended
-                if seq['tokens'][-1] == 1:  # EOS token
-                    complete_sequences.append(seq)
-                    continue
-                
                 # Create decoder input from current sequence
                 current_length = len(seq['tokens'])
                 decoder_input = torch.full((1, self.tgt_seq_len), 2, dtype=torch.long, device=encoder_output.device)
@@ -585,7 +576,7 @@ class TransformerDecoder(nn.Module):
                 # Make sure we don't go out of bounds
                 if current_length >= self.tgt_seq_len:
                     continue  # Skip if sequence is already at max length
-                topk_scores, topk_indices = decoder_output[0, current_length, :].topk(beam_width)
+                topk_scores, topk_indices = F.log_softmax(decoder_output[0, current_length-1, :], dim=-1).topk(beam_width)
                 
                 for k in range(beam_width):
                     # Create new candidate
@@ -594,38 +585,32 @@ class TransformerDecoder(nn.Module):
                         'score': seq['score'] + topk_scores[k].item()
                     }
                     
-                    # Check if this candidate ends with EOS
-                    if topk_indices[k] == 1:  # EOS token
-                        complete_sequences.append(candidate)
-                    else:
-                        all_candidates.append(candidate)
-            
+                    all_candidates.append(candidate)
+
             # Select top beam_width candidates
-            if all_candidates:
-                sequences = sorted(all_candidates, key=lambda x: x['score'], reverse=True)[:beam_width]
-            else:
-                break  # All sequences have ended
             
-            # Early stopping if we have enough complete sequences
-            if len(complete_sequences) >= beam_width:
-                break
-        
-        # Add any remaining sequences as complete
-        complete_sequences.extend(sequences)
+            sequences = sorted(all_candidates, key=lambda x: x['score'], reverse=True)[:beam_width]
+            seq_to_delete = []
+            for seq in sequences:
+                if seq["tokens"][-1]==1:
+                    complete_sequences.append(seq)
+                    seq_to_delete.append(seq)
+            for seq in seq_to_delete:
+                sequences.remove(seq)
+   
+
         
         # Return the best sequence with length normalization
-        if complete_sequences:
-            best_sequence = max(complete_sequences, key=lambda x: x['score'] / len(x['tokens']))
-            # Convert to tensor format
-            result = torch.full((1, self.tgt_seq_len), 2, dtype=torch.long, device=encoder_output.device)
-            result[0, :len(best_sequence['tokens'])] = torch.tensor(best_sequence['tokens'], device=encoder_output.device)
-            return result
-        else:
-            # Fallback: return empty sequence
-            result = torch.full((1, self.tgt_seq_len), 2, dtype=torch.long, device=encoder_output.device)
-            result[0, 0] = 0  # SOS token
-            return result
-
+        all_sequences = complete_sequences + sequences
+        
+        best_sequence = max(all_sequences, key=lambda x: x['score'] / len(x['tokens']))
+        
+        
+        # Convert to tensor format
+        result = torch.full((1, self.tgt_seq_len), 2, dtype=torch.long, device=encoder_output.device)
+        result[0, :len(best_sequence['tokens'])] = torch.tensor(best_sequence['tokens'], device=encoder_output.device)
+        return result
+        
         
 
         
