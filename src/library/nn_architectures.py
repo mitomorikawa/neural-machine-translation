@@ -87,7 +87,6 @@ class RNNDecoder(nn.Module):
                     _, topi = decoder_output.topk(1)
                     decoder_input = topi.squeeze(-1).detach()  # detach from history as input
             decoder_outputs = torch.cat(decoder_outputs, dim=1)
-            decoder_outputs = F.log_softmax(decoder_outputs, dim=-1)
             attentions = torch.cat(attentions, dim=1)
             return decoder_outputs, decoder_hidden, attentions
         
@@ -299,16 +298,19 @@ class TransformerEncoderLayer(nn.Module):
             torch.Tensor: Encoded output tensor of shape (batch_size, seq_len, hidden_size).
         """
 
-        # Multihead attention
-        attention_output = self.attention(encoder_layer_input, encoder_layer_input, encoder_layer_input, padding_mask)
+        # Pre-normalization for multihead attention
+        normalized_input = self.layerNorm1(encoder_layer_input)
+        attention_output = self.attention(normalized_input, normalized_input, normalized_input, padding_mask)
         attention_output = self.dropout1(attention_output)
-        # Layernorm and add. 
-        attention_output = self.layerNorm1(attention_output + encoder_layer_input)
-        # Feedforward network
-        ff_output = self.linear2(self.relu(self.linear1(attention_output)))
+        # Residual connection
+        attention_output = attention_output + encoder_layer_input
+        
+        # Pre-normalization for feedforward network
+        normalized_attention = self.layerNorm2(attention_output)
+        ff_output = self.linear2(self.relu(self.linear1(normalized_attention)))
         ff_output = self.dropout2(ff_output)
-        # Layernorm and add. Ciyld add dropout here
-        output = self.layerNorm2(ff_output + attention_output)
+        # Residual connection
+        output = ff_output + attention_output
         return output
     
 class TransformerEncoder(nn.Module):
@@ -330,6 +332,8 @@ class TransformerEncoder(nn.Module):
         self.src_seq_len = src_seq_len
         self.encoderlayers = nn.ModuleList([TransformerEncoderLayer(src_seq_len, hidden_size, heads, relposenc) for _ in range(num_layer)])
         self.relposenc = relposenc
+        # Final layer normalization for pre-norm architecture
+        self.final_layer_norm = nn.LayerNorm(hidden_size)
         # Initialize weights
         self._init_weights()
         
@@ -358,6 +362,8 @@ class TransformerEncoder(nn.Module):
             embedding += pos_encoding# Add absolute positional encoding
         for i in range(self.num_layer):
             embedding = self.encoderlayers[i](embedding, padding_mask)
+        # Apply final layer normalization for pre-norm architecture
+        embedding = self.final_layer_norm(embedding)
         return embedding,0
     
     def _init_weights(self):
@@ -403,21 +409,26 @@ class TransformerDecoderLayer(nn.Module):
         Returns:
             torch.Tensor: Decoded output tensor of shape (batch_size, seq_len, hidden_size).
         """
-        # Masked multihead attention
-        attention1_output = self.attention1(decoder_layer_input, decoder_layer_input, decoder_layer_input, self_padding_mask)
+        # Pre-normalization for masked multihead attention
+        normalized_input = self.layerNorm1(decoder_layer_input)
+        attention1_output = self.attention1(normalized_input, normalized_input, normalized_input, self_padding_mask)
         attention1_output = self.dropout1(attention1_output)
-        # Add and Layer Normalisation
-        attention1_output = self.layerNorm1(attention1_output + decoder_layer_input)
-        # Cross attention (no mask needed)
-        attention2_output = self.attention2(attention1_output, encoder_output, encoder_output, cross_padding_mask)
+        # Residual connection
+        attention1_output = attention1_output + decoder_layer_input
+        
+        # Pre-normalization for cross attention
+        normalized_attention1 = self.layerNorm2(attention1_output)
+        attention2_output = self.attention2(normalized_attention1, encoder_output, encoder_output, cross_padding_mask)
         attention2_output = self.dropout2(attention2_output)
-        # Add and Layer Normalisation
-        attention2_output = self.layerNorm2(attention2_output + attention1_output)
-        # Feedforward network
-        ff_output = self.linear2(self.relu(self.linear1(attention2_output)))
+        # Residual connection
+        attention2_output = attention2_output + attention1_output
+        
+        # Pre-normalization for feedforward network
+        normalized_attention2 = self.layerNorm3(attention2_output)
+        ff_output = self.linear2(self.relu(self.linear1(normalized_attention2)))
         ff_output = self.dropout3(ff_output)
-        # Add and Layer Normalisation
-        output = self.layerNorm3(ff_output + attention2_output)
+        # Residual connection
+        output = ff_output + attention2_output
         return output
 
 class TransformerDecoder(nn.Module):
@@ -438,6 +449,8 @@ class TransformerDecoder(nn.Module):
         self.num_layer = num_layer
         self.hidden_size = hidden_size
         self.decoderlayers = nn.ModuleList([TransformerDecoderLayer(tgt_seq_len, hidden_size, heads=heads, relposenc=relposenc) for _ in range(num_layer)])
+        # Final layer normalization for pre-norm architecture
+        self.final_layer_norm = nn.LayerNorm(hidden_size)
         self.output = nn.Linear(hidden_size, output_size)
         self.tgt_seq_len = tgt_seq_len
         self.relposenc = relposenc
@@ -481,6 +494,8 @@ class TransformerDecoder(nn.Module):
             embedding += pos_encoding
         for i in range(self.num_layer):
             embedding = self.decoderlayers[i](embedding, encoder_outputs, self_padding_mask, cross_padding_mask)
+        # Apply final layer normalization for pre-norm architecture
+        embedding = self.final_layer_norm(embedding)
         output = self.output(embedding)
         return output, 0,0
     
