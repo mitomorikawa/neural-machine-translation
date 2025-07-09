@@ -25,6 +25,8 @@ encoder, decoder = translator_class.load_models(encoder, decoder)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 encoder = encoder.to(device)
 decoder = decoder.to(device)
+encoder.eval()
+decoder.eval()
 
 src_vocab = translator_class.load_vocab("../data/eng_vocab.pkl")
 tgt_vocab = translator_class.load_vocab("../data/fra_vocab.pkl")

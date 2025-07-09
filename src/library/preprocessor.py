@@ -20,19 +20,23 @@ class DataLoader:
     def __init__(self, file_paths):
         self.file_paths = file_paths
 
-    def load(self):
+    def load(self, header=1):
         """
         Loads data from the specified file paths and returns two list of strings.
-                returns: 
-                    Tuple(List[str], List[str]) - A tuple containing two lists of strings, one for each file. 
-                            The first is English and the second is French.
+        Params:
+            header (int): The number of header rows to skip in the CSV file.
+        returns: 
+            Tuple(List[str], List[str]) - A tuple containing two lists of strings, one for each file. 
+            The first is English and the second is French.
+                        
         """
         eng_texts = []
         fra_texts = []
 
         with open(self.file_paths, 'r', encoding='utf-8') as file:
             reader = csv.reader(file)
-            next(reader)  # Skip header row
+            for _ in range(header):
+                next(reader)  # Skip header row
             rows = list(reader)
             for row in tqdm(rows, desc="Loading data"):
                 eng_texts.append(row[0])

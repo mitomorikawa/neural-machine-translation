@@ -30,7 +30,7 @@ decoder = nn_architectures.TransformerDecoder(hidden_size, output_size, tgt_seq_
 train_instance = trainer.Trainer(
     encoder=encoder,
     decoder=decoder,
-    loss_fn=torch.nn.CrossEntropyLoss(ignore_index=2),
+    loss_fn=torch.nn.CrossEntropyLoss(ignore_index=2, label_smoothing=0.1),  # Using label smoothings
     lr=0.0001,  # Lower base learning rate
     n_epochs=100,
     transformer=True,

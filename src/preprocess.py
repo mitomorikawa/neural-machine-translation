@@ -3,9 +3,7 @@ import library.preprocessor as preprocessor
 src_language = "eng"
 tgt_language = "fra"
 
-file_name = f"{src_language}_{tgt_language}_large.csv"
-src_max_len = 55
-tgt_max_len = 69
+file_name = f"{src_language}_{tgt_language}.csv"
 
 print("Loading data...")
 dataloader = preprocessor.DataLoader(f"../data/{file_name}")
@@ -21,9 +19,9 @@ print("Done standardizing target language texts.\n\n")
 
 print("Tokenizing texts...")
 tokenizer = preprocessor.Tokenizer()
-src_tokens = tokenizer.word_tokenize(standadized_src_texts, max_len=src_max_len)
+src_tokens = tokenizer.word_tokenize(standadized_src_texts)
 print("Done tokenizing source language texts. First 10 sentences:", src_tokens[:10], "\n\n")
-tgt_tokens = tokenizer.word_tokenize(standadized_tgt_texts, max_len=tgt_max_len)
+tgt_tokens = tokenizer.word_tokenize(standadized_tgt_texts)
 print("Done tokenizing target language texts. First 10 sentences:", tgt_tokens[:10], "\n\n")
 
 print("Indexing source language texts...")
@@ -40,8 +38,8 @@ print("Done indexing target language texts. ")
 print("Vocabulary size:", tgt_indexer.vocab_size)
 print("First 10 words in target language vocabulary:", list(tgt_indexer.word2idx.keys())[:10], "\n\n")
 print("Saving vocabulary...")
-src_indexer.save_vocab(f"../data/{src_language}_vocab_large.pkl")
-tgt_indexer.save_vocab(f"../data/{tgt_language}_vocab_large.pkl")
+src_indexer.save_vocab(f"../data/{src_language}_vocab.pkl")
+tgt_indexer.save_vocab(f"../data/{tgt_language}_vocab.pkl")
 print("Done saving vocabulary to ../data/{src_language}_vocab.pkl and ../data/{tgt_language}_vocab.pkl.\n\n")
 
 
@@ -63,16 +61,16 @@ print(f"Test set size: {len(src_test)} sentences.\n\n")
 
 
 print("Saving training data...")
-splitter.save_indices(src_train, f"../data/{src_language}_train_large.pt")
-splitter.save_indices(tgt_train, f"../data/{tgt_language}_train_large.pt")
-print(f"Done saving training data to ../data/{src_language}_train_large.pt and ../data/{tgt_language}_train_large.pt.\n\n")
+splitter.save_indices(src_train, f"../data/{src_language}_train.pt")
+splitter.save_indices(tgt_train, f"../data/{tgt_language}_train.pt")
+print(f"Done saving training data to ../data/{src_language}_train.pt and ../data/{tgt_language}_train.pt.\n\n")
 
 print("Saving validation data...")
-splitter.save_indices(src_val, f"../data/{src_language}_val_large.pt")
-splitter.save_indices(tgt_val, f"../data/{tgt_language}_val_large.pt")
-print(f"Done saving validation data to ../data/{src_language}_val_large.pt and ../data/{tgt_language}_val_large.pt.\n\n")
+splitter.save_indices(src_val, f"../data/{src_language}_val.pt")
+splitter.save_indices(tgt_val, f"../data/{tgt_language}_val.pt")
+print(f"Done saving validation data to ../data/{src_language}_val.pt and ../data/{tgt_language}_val.pt.\n\n")
 
 print("Saving test data...")
-splitter.save_indices(src_test, f"../data/{src_language}_test_large.pt")
-splitter.save_indices(tgt_test, f"../data/{tgt_language}_test_large.pt")
-print(f"Done saving test data to ../data/{src_language}_test_large.pt and ../data/{tgt_language}_test_large.pt.\n\n")
+splitter.save_indices(src_test, f"../data/{src_language}_test.pt")
+splitter.save_indices(tgt_test, f"../data/{tgt_language}_test.pt")
+print(f"Done saving test data to ../data/{src_language}_test.pt and ../data/{tgt_language}_test.pt.\n\n")
