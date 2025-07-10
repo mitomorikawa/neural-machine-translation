@@ -18,6 +18,7 @@ def main():
     parser.add_argument('--n_epochs', type=int, default=400, help='Number of epochs')
     parser.add_argument('--num_layers', type=int, default=3, help='Number of transformer layers')
     parser.add_argument('--dropout', type=float, default=0.3, help='Dropout probability')
+    parser.add_argument('--relposenc', type=bool, default=False, help='Relative or absolute positional encoding')
     parser.add_argument('--linear_hidden_ratio', type=int, default=8, help='Feedforward hidden layer ratio')
     parser.add_argument('--label_smoothing', type=float, default=0.1, help='Label smoothing value')
     parser.add_argument('--warmup_steps', type=int, default=4000, help='Warmup steps for learning rate scheduler')
@@ -38,10 +39,10 @@ def main():
     tgt_seq_len = 69  # Maximum target sequence length
 
     encoder = nn_architectures.TransformerEncoder(input_size, args.hidden_size, src_seq_len, 
-                                                 num_layer=args.num_layers, dropout_p=args.dropout, 
+                                                 num_layer=args.num_layers, dropout_p=args.dropout, relposenc=args.relposenc,
                                                  linear_hidden_ratio=args.linear_hidden_ratio).to(device)
     decoder = nn_architectures.TransformerDecoder(args.hidden_size, output_size, tgt_seq_len, 
-                                                 num_layer=args.num_layers, dropout_p=args.dropout, 
+                                                 num_layer=args.num_layers, dropout_p=args.dropout, relposenc=args.relposenc,
                                                  linear_hidden_ratio=args.linear_hidden_ratio).to(device)
 
 
