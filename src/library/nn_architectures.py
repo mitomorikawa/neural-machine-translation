@@ -358,12 +358,12 @@ class TransformerEncoder(nn.Module):
         embedding = self.embedding(encoder_input)
         # Scale embeddings by sqrt(d_model) as in the paper
         embedding = embedding * (self.hidden_size ** 0.5)
-        embedding = self.dropout(embedding)
         batch_size = embedding.size(0)
         if not self.relposenc:
             # If relative positional encoding is not used, create absolute positional encoding
             pos_encoding = absolutePositionalEncoding(batch_size, self.src_seq_len, self.hidden_size)
-            embedding += pos_encoding# Add absolute positional encoding
+            embedding += pos_encoding  # Add absolute positional encoding
+        embedding = self.dropout(embedding)
         for i in range(self.num_layer):
             embedding = self.encoderlayers[i](embedding, padding_mask)
         # Apply final layer normalization for pre-norm architecture
@@ -490,12 +490,12 @@ class TransformerDecoder(nn.Module):
         embedding = self.embedding(decoder_input)
         # Scale embeddings by sqrt(d_model) as in the paper
         embedding = embedding * (self.hidden_size ** 0.5)
-        embedding = self.dropout(embedding)
         batch_size = embedding.size(0)
         if not self.relposenc:
             # If relative positional encoding is not used, create absolute positional encoding
             pos_encoding = absolutePositionalEncoding(batch_size, self.tgt_seq_len, self.hidden_size)
             embedding += pos_encoding
+        embedding = self.dropout(embedding)
         for i in range(self.num_layer):
             embedding = self.decoderlayers[i](embedding, encoder_outputs, self_padding_mask, cross_padding_mask)
         # Apply final layer normalization for pre-norm architecture
