@@ -4,6 +4,7 @@ This module contains the Trainer class, which is responsible for training the mo
 
 import torch
 from torch.utils.tensorboard import SummaryWriter
+from torch.cuda.amp import autocast, GradScaler
 import time
 from datetime import datetime
 import os 
@@ -83,7 +84,7 @@ class Trainer:
         transformer (bool): Whether to use a transformer architecture or not.
     """
     
-    def __init__(self, encoder, decoder, loss_fn, lr, n_epochs, patience=5, transformer=False, d_model=None, warmup_steps=4000):
+    def __init__(self, encoder, decoder, loss_fn, lr, n_epochs, patience=5, transformer=False, d_model=None, warmup_steps=4000, use_amp=False):
         self.encoder = encoder
         self.decoder = decoder
         self.loss_fn = loss_fn
@@ -94,6 +95,8 @@ class Trainer:
         self.transformer = transformer
         self.d_model = d_model
         self.warmup_steps = warmup_steps
+        self.use_amp = use_amp
+        self.scaler = GradScaler() if use_amp else None
 
     def train_epoch(self, dataloader, encoder_optimizer, decoder_optimizer, encoder_scheduler=None, decoder_scheduler=None):
         """ 
@@ -117,21 +120,45 @@ class Trainer:
             tgt_idx = tgt_idx.to(self.device)
             encoder_optimizer.zero_grad()
             decoder_optimizer.zero_grad()
-            encoder_outputs, encoder_hidden = self.encoder(src_idx)
-            decoder_outputs, _, _ = self.decoder(encoder_outputs, encoder_hidden, tgt_idx, src_idx)
-            if self.transformer:
-                # For transformer: decoder predicts next token, so we compare outputs with shifted targets
-                # decoder_outputs[:, i] should predict tgt_idx[:, i+1]
-                target = tgt_idx[:, 1:]  # Remove <sos> token from targets
-                decoder_outputs = decoder_outputs[:, :-1]  # Remove last prediction
+            
+            if self.use_amp:
+                with autocast(dtype=torch.float16):
+                    encoder_outputs, encoder_hidden = self.encoder(src_idx)
+                    decoder_outputs, _, _ = self.decoder(encoder_outputs, encoder_hidden, tgt_idx, src_idx)
+                    if self.transformer:
+                        # For transformer: decoder predicts next token, so we compare outputs with shifted targets
+                        # decoder_outputs[:, i] should predict tgt_idx[:, i+1]
+                        target = tgt_idx[:, 1:]  # Remove <sos> token from targets
+                        decoder_outputs = decoder_outputs[:, :-1]  # Remove last prediction
+                    else:
+                        target = tgt_idx
+                    loss = self.loss_fn(decoder_outputs.reshape(-1, decoder_outputs.size(-1)), target.reshape(-1))
+                
+                self.scaler.scale(loss).backward()
+                self.scaler.unscale_(encoder_optimizer)
+                self.scaler.unscale_(decoder_optimizer)
+                torch.nn.utils.clip_grad_norm_(self.encoder.parameters(), max_norm=1.0)
+                torch.nn.utils.clip_grad_norm_(self.decoder.parameters(), max_norm=1.0)
+                self.scaler.step(encoder_optimizer)
+                self.scaler.step(decoder_optimizer)
+                self.scaler.update()
             else:
-                target = tgt_idx
-            loss = self.loss_fn(decoder_outputs.reshape(-1, decoder_outputs.size(-1)), target.reshape(-1))
-            loss.backward()
-            torch.nn.utils.clip_grad_norm_(self.encoder.parameters(), max_norm=1.0)
-            torch.nn.utils.clip_grad_norm_(self.decoder.parameters(), max_norm=1.0)
-            encoder_optimizer.step()
-            decoder_optimizer.step()
+                encoder_outputs, encoder_hidden = self.encoder(src_idx)
+                decoder_outputs, _, _ = self.decoder(encoder_outputs, encoder_hidden, tgt_idx, src_idx)
+                if self.transformer:
+                    # For transformer: decoder predicts next token, so we compare outputs with shifted targets
+                    # decoder_outputs[:, i] should predict tgt_idx[:, i+1]
+                    target = tgt_idx[:, 1:]  # Remove <sos> token from targets
+                    decoder_outputs = decoder_outputs[:, :-1]  # Remove last prediction
+                else:
+                    target = tgt_idx
+                loss = self.loss_fn(decoder_outputs.reshape(-1, decoder_outputs.size(-1)), target.reshape(-1))
+                loss.backward()
+                torch.nn.utils.clip_grad_norm_(self.encoder.parameters(), max_norm=1.0)
+                torch.nn.utils.clip_grad_norm_(self.decoder.parameters(), max_norm=1.0)
+                encoder_optimizer.step()
+                decoder_optimizer.step()
+            
             if encoder_scheduler:
                 encoder_scheduler.step()
             if decoder_scheduler:
@@ -169,6 +196,7 @@ class Trainer:
         
         writer = SummaryWriter(log_dir="../runs/training_logs")
         best_vloss = float('inf')
+        epochs_no_improve = 0  # ADDED LINE: Counter for early stopping
         for epoch in range(self.n_epochs):
             epoch_train_loss = self.train_epoch(train_dataloader, encoder_optimizer, decoder_optimizer, encoder_scheduler, decoder_scheduler)
             epoch_val_total_loss = 0
@@ -180,15 +208,27 @@ class Trainer:
                 for src_idx, tgt_idx in val_dataloader:
                     src_idx = src_idx.to(self.device)
                     tgt_idx = tgt_idx.to(self.device)
-                    encoder_outputs, encoder_hidden = self.encoder(src_idx)
-                    decoder_outputs, _, _ = self.decoder(encoder_outputs, encoder_hidden, tgt_idx, src_idx)
-                    if self.transformer:
-                        # For transformer: decoder predicts next token, so we compare outputs with shifted targets
-                        target = tgt_idx[:, 1:]  # Remove <sos> token from targets
-                        decoder_outputs = decoder_outputs[:, :-1]  # Remove last prediction
+                    if self.use_amp:
+                        with autocast(dtype=torch.float16):
+                            encoder_outputs, encoder_hidden = self.encoder(src_idx)
+                            decoder_outputs, _, _ = self.decoder(encoder_outputs, encoder_hidden, tgt_idx, src_idx)
+                            if self.transformer:
+                                # For transformer: decoder predicts next token, so we compare outputs with shifted targets
+                                target = tgt_idx[:, 1:]  # Remove <sos> token from targets
+                                decoder_outputs = decoder_outputs[:, :-1]  # Remove last prediction
+                            else:
+                                target = tgt_idx
+                            loss = self.loss_fn(decoder_outputs.reshape(-1, decoder_outputs.size(-1)), target.reshape(-1))
                     else:
-                        target = tgt_idx
-                    loss = self.loss_fn(decoder_outputs.reshape(-1, decoder_outputs.size(-1)), target.reshape(-1))
+                        encoder_outputs, encoder_hidden = self.encoder(src_idx)
+                        decoder_outputs, _, _ = self.decoder(encoder_outputs, encoder_hidden, tgt_idx, src_idx)
+                        if self.transformer:
+                            # For transformer: decoder predicts next token, so we compare outputs with shifted targets
+                            target = tgt_idx[:, 1:]  # Remove <sos> token from targets
+                            decoder_outputs = decoder_outputs[:, :-1]  # Remove last prediction
+                        else:
+                            target = tgt_idx
+                        loss = self.loss_fn(decoder_outputs.reshape(-1, decoder_outputs.size(-1)), target.reshape(-1))
                     epoch_val_total_loss += loss.item()
             elapsed = time.time() - start
             h, rem = divmod(elapsed, 3600)

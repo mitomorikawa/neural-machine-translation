@@ -39,8 +39,11 @@ class DataLoader:
                 next(reader)  # Skip header row
             rows = list(reader)
             for row in tqdm(rows, desc="Loading data"):
-                eng_texts.append(row[0])
-                fra_texts.append(row[1])
+                if len(row) == 2:
+                    eng_texts.append(row[0])
+                    fra_texts.append(row[1])
+                else:
+                    continue
         return eng_texts, fra_texts
     
 class Standardizer:

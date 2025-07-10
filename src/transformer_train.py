@@ -19,20 +19,20 @@ tgt_val = loader.load("../data/fra_val.pt", device=device)
 hidden_size = 256
 input_size = 9783
 output_size = 15532
-batch_size = 512
+batch_size = 2048
 src_seq_len = 55  # Maximum source sequence length
 tgt_seq_len = 69  # Maximum target sequence length
 
-encoder = nn_architectures.TransformerEncoder(input_size, hidden_size, src_seq_len, num_layer=3, dropout_p=0.3).to(device)
-decoder = nn_architectures.TransformerDecoder(hidden_size, output_size, tgt_seq_len, num_layer=3, dropout_p=0.3).to(device)
+encoder = nn_architectures.TransformerEncoder(input_size, hidden_size, src_seq_len, num_layer=6, dropout_p=0.3, linear_hidden_ratio=8).to(device)
+decoder = nn_architectures.TransformerDecoder(hidden_size, output_size, tgt_seq_len, num_layer=6, dropout_p=0.3, linear_hidden_ratio=8).to(device)
 
 
 train_instance = trainer.Trainer(
     encoder=encoder,
     decoder=decoder,
     loss_fn=torch.nn.CrossEntropyLoss(ignore_index=2, label_smoothing=0.1),  # Using label smoothings
-    lr=0.0001,  # Lower base learning rate
-    n_epochs=100,
+    lr=0.001,  # Lower base learning rate
+    n_epochs=400,
     transformer=True,
     d_model=hidden_size,  # Using hidden_size as d_model
     warmup_steps=4000  # Reduced warmup for smaller model

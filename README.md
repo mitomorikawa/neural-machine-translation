@@ -1,17 +1,27 @@
 # Neural Machine Translation (NMT) - English to French
 
-A PyTorch implementation of Neural Machine Translation using the Bahdanau attention mechanism for translating English text to French.
-
-## Features
-
-- Encoder-Decoder architecture with Bahdanau attention
-- Batch processing support
-- TensorBoard integration for training visualization
-- Modular design with separate preprocessing, training, validation, and translation modules
+## Overview
+This is a PyTorch implementation of Neural Machine Translation for translating English text to French. For training, I used Bahdanau attention and Transformer, which are implemented from scratch in src/library/nn_architectures.py. 
 
 ## Dataset
 
-The dataset was taken from https://www.kaggle.com/datasets/devicharith/language-translation-englishfrench.
+The dataset was taken from https://www.kaggle.com/datasets/devicharith/language-translation-englishfrench. and WMT 2014 English-French.
+
+## Models
+### 1. Bahdanau Attention
+
+Dataset used: https://www.kaggle.com/datasets/devicharith/language-translation-englishfrench. 
+Hyperparameters
+•hidden_size = 1024  
+•batch_size = 256
+•learning rate = 0.001
+•Encoder used bidirectional GRU
+
+### 2. Transformer
+
+Hyperparameters
+•
+
 
 ## Project Structure
 
@@ -47,7 +57,7 @@ nmt/
 - NumPy
 - Pickle
 
-## Usage
+## Training
 
 ### 1. Data Preprocessing
 
@@ -66,71 +76,3 @@ This will:
 - Save preprocessed tensors and vocabulary files
 
 ### 2. Training
-
-Train the NMT model with Bahdanau attention:
-
-```bash
-python bahdanau_train.py
-```
-
-Default configuration:
-- Hidden size: 
-- Learning rate: 0.001
-- Batch size: 
-- Epochs: 
-- Optimizer: Adam
-- Loss function: CrossEntropyLoss
-
-Training progress can be monitored using TensorBoard:
-
-```bash
-tensorboard --logdir=../runs/training_logs
-```
-
-### 3. Translation
-
-Translate English text to French interactively:
-
-```bash
-python translate.py
-```
-
-Enter English text when prompted, and the model will output the French translation.
-
-This will calculate metrics like BLEU score and perplexity on the validation/test data.
-
-## Model Architecture
-
-### Encoder
-- Bidirectional GRU-based RNN
-- Input embedding layer
-- Hidden state initialization
-
-### Decoder with Bahdanau Attention
-- GRU-based RNN with attention mechanism
-- Attention weights computed using encoder hidden states
-- Context vector combined with decoder input
-- Output projection layer
-
-## Testing
-
-Run unit tests:
-
-```bash
-cd tests
-python -m pytest
-```
-
-## Model Checkpoints
-
-Trained models are saved in the `models/` directory with timestamps:
-- `bahdanau_encoder_YYYYMMDD_HHMMSS_epoch`
-- `bahdanau_decoder_YYYYMMDD_HHMMSS_epoch`
-
-## Notes
-
-- The model uses teacher forcing during training
-- Vocabulary includes special tokens: `<PAD>`, `<SOS>`, `<EOS>`, `<UNK>`
-- GPU acceleration is automatically used if available
-
-

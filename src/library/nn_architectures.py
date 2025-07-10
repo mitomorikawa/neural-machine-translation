@@ -277,15 +277,16 @@ class TransformerEncoderLayer(nn.Module):
         linear1 (nn.Linear): First linear layer in the feedforward network.
         relu (nn.ReLU): Activation function.
         linear2 (nn.Linear): Second linear layer in the feedforward network.
+        linear_hidden_ratio (int): the ratio of linear hidden size to embedding hidden size.
     """
-    def __init__(self, src_seq_len, hidden_size, heads, relposenc, dropout_p=0.1):
+    def __init__(self, src_seq_len, hidden_size, heads, relposenc, dropout_p=0.1, linear_hidden_ratio=4):
         super(TransformerEncoderLayer, self).__init__()
         self.attention = TransformerAttention(src_seq_len, hidden_size, heads=heads, relposenc=relposenc)
         self.layerNorm1 = nn.LayerNorm(hidden_size)
         self.layerNorm2 = nn.LayerNorm(hidden_size)
-        self.linear1 = nn.Linear(hidden_size, 4*hidden_size)
+        self.linear1 = nn.Linear(hidden_size, linear_hidden_ratio*hidden_size)
         self.relu = nn.ReLU()
-        self.linear2 = nn.Linear(4*hidden_size, hidden_size)
+        self.linear2 = nn.Linear(linear_hidden_ratio*hidden_size, hidden_size)
         self.dropout1 = nn.Dropout(dropout_p)
         self.dropout2 = nn.Dropout(dropout_p)
 
@@ -324,14 +325,14 @@ class TransformerEncoder(nn.Module):
             - num_layer (int): Number of transformer encoder layers.
             - dropout_p (float): Dropout probability.
         """
-    def __init__(self, input_size, hidden_size, src_seq_len, heads=8, num_layer=6, dropout_p=0.1, relposenc=True):
+    def __init__(self, input_size, hidden_size, src_seq_len, heads=8, num_layer=6, dropout_p=0.1, relposenc=True, linear_hidden_ratio=4):
         super(TransformerEncoder, self).__init__()
         self.embedding = nn.Embedding(input_size, hidden_size, padding_idx=2)
         self.dropout = nn.Dropout(dropout_p)
         self.num_layer = num_layer
         self.hidden_size = hidden_size
         self.src_seq_len = src_seq_len
-        self.encoderlayers = nn.ModuleList([TransformerEncoderLayer(src_seq_len, hidden_size, heads, relposenc) for _ in range(num_layer)])
+        self.encoderlayers = nn.ModuleList([TransformerEncoderLayer(src_seq_len, hidden_size, heads, relposenc, dropout_p=dropout_p, linear_hidden_ratio=linear_hidden_ratio) for _ in range(num_layer)])
         self.relposenc = relposenc
         # Final layer normalization for pre-norm architecture
         self.final_layer_norm = nn.LayerNorm(hidden_size)
@@ -384,16 +385,16 @@ class TransformerDecoderLayer(nn.Module):
         relu (nn.ReLU): Activation function.
         linear2 (nn.Linear): Second linear layer in the feedforward network.
     """
-    def __init__(self, tgt_seq_len, hidden_size, heads, relposenc, dropout_p=0.1):
+    def __init__(self, tgt_seq_len, hidden_size, heads, relposenc, dropout_p=0.1, linear_hidden_ratio=4):
         super(TransformerDecoderLayer, self).__init__()
         self.attention1 = TransformerAttention(tgt_seq_len, hidden_size, heads=heads, mask=True, relposenc=relposenc)
         self.attention2 = TransformerAttention(tgt_seq_len, hidden_size, heads=heads, cross_attention=True,relposenc=relposenc)
         self.layerNorm1 = nn.LayerNorm(hidden_size)
         self.layerNorm2 = nn.LayerNorm(hidden_size)
         self.layerNorm3 = nn.LayerNorm(hidden_size)
-        self.linear1 = nn.Linear(hidden_size, 4*hidden_size)
+        self.linear1 = nn.Linear(hidden_size, linear_hidden_ratio*hidden_size)
         self.relu = nn.ReLU()
-        self.linear2 = nn.Linear(4*hidden_size, hidden_size)
+        self.linear2 = nn.Linear(linear_hidden_ratio*hidden_size, hidden_size)
         self.dropout1 = nn.Dropout(dropout_p)
         self.dropout2 = nn.Dropout(dropout_p)
         self.dropout3 = nn.Dropout(dropout_p)
@@ -443,13 +444,13 @@ class TransformerDecoder(nn.Module):
         - dropout_p (float): Dropout probability.
 
     """
-    def __init__(self, hidden_size, output_size, tgt_seq_len, heads=8, num_layer=6, dropout_p=0.1, relposenc=True): 
+    def __init__(self, hidden_size, output_size, tgt_seq_len, heads=8, num_layer=6, dropout_p=0.1, relposenc=True, linear_hidden_ratio=4): 
         super(TransformerDecoder, self).__init__()
         self.embedding = nn.Embedding(output_size, hidden_size, padding_idx=2)
         self.dropout = nn.Dropout(dropout_p)
         self.num_layer = num_layer
         self.hidden_size = hidden_size
-        self.decoderlayers = nn.ModuleList([TransformerDecoderLayer(tgt_seq_len, hidden_size, heads=heads, relposenc=relposenc) for _ in range(num_layer)])
+        self.decoderlayers = nn.ModuleList([TransformerDecoderLayer(tgt_seq_len, hidden_size, heads=heads, relposenc=relposenc, dropout_p=dropout_p, linear_hidden_ratio=linear_hidden_ratio) for _ in range(num_layer)])
         # Final layer normalization for pre-norm architecture
         self.final_layer_norm = nn.LayerNorm(hidden_size)
         self.output = nn.Linear(hidden_size, output_size)
