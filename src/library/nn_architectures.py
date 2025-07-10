@@ -180,7 +180,7 @@ def absolutePositionalEncoding(batch_size, seq_len, hidden_size):
     
     
 class TransformerAttention(nn.Module):
-    def __init__(self, query_seq_len, hidden_size, heads=8, mask=False, cross_attention=False, relposenc=True):
+    def __init__(self, query_seq_len, hidden_size, heads=8, mask=False, cross_attention=False, relposenc=True, dropout_p=0.1):
         super(TransformerAttention, self).__init__()
         self.Wq = nn.Linear(hidden_size, hidden_size)
         self.Wk = nn.Linear(hidden_size, hidden_size)
@@ -200,6 +200,7 @@ class TransformerAttention(nn.Module):
         # Initialize with Xavier/Glorot uniform
         nn.init.xavier_uniform_(self.positional_embedding, gain=1.0)
         self.relposenc= relposenc
+        self.dropout = nn.Dropout(p=dropout_p)
         
     def forward(self, query, key, value, padding_mask=None):
         """
@@ -231,6 +232,7 @@ class TransformerAttention(nn.Module):
         if padding_mask is not None:
             attention += padding_mask
         attention_score = self.softmax(attention)
+        attention_score = self.dropout(attention_score)
         attention_output = torch.einsum('b h q k, b h k d -> b h q d', attention_score, value)
         attention_output = rearrange(attention_output, 'b h l d -> b l (h d)')
         attention_output = self.Wo(attention_output)
@@ -281,7 +283,7 @@ class TransformerEncoderLayer(nn.Module):
     """
     def __init__(self, src_seq_len, hidden_size, heads, relposenc, dropout_p=0.1, linear_hidden_ratio=4):
         super(TransformerEncoderLayer, self).__init__()
-        self.attention = TransformerAttention(src_seq_len, hidden_size, heads=heads, relposenc=relposenc)
+        self.attention = TransformerAttention(src_seq_len, hidden_size, heads=heads, relposenc=relposenc, dropout_p=dropout_p)
         self.layerNorm1 = nn.LayerNorm(hidden_size)
         self.layerNorm2 = nn.LayerNorm(hidden_size)
         self.linear1 = nn.Linear(hidden_size, linear_hidden_ratio*hidden_size)
@@ -387,8 +389,8 @@ class TransformerDecoderLayer(nn.Module):
     """
     def __init__(self, tgt_seq_len, hidden_size, heads, relposenc, dropout_p=0.1, linear_hidden_ratio=4):
         super(TransformerDecoderLayer, self).__init__()
-        self.attention1 = TransformerAttention(tgt_seq_len, hidden_size, heads=heads, mask=True, relposenc=relposenc)
-        self.attention2 = TransformerAttention(tgt_seq_len, hidden_size, heads=heads, cross_attention=True,relposenc=relposenc)
+        self.attention1 = TransformerAttention(tgt_seq_len, hidden_size, heads=heads, mask=True, relposenc=relposenc, dropout_p=dropout_p)
+        self.attention2 = TransformerAttention(tgt_seq_len, hidden_size, heads=heads, cross_attention=True,relposenc=relposenc, dropout_p=dropout_p)
         self.layerNorm1 = nn.LayerNorm(hidden_size)
         self.layerNorm2 = nn.LayerNorm(hidden_size)
         self.layerNorm3 = nn.LayerNorm(hidden_size)
