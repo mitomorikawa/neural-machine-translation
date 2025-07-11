@@ -10,16 +10,16 @@ import library.nn_architectures as nn_architectures
 import library.preprocessor as preprocessor
 import torch
 
-encoder_path = "/Users/morikawakaion/Desktop/nmt/models/transformer_encoder_20250709_085756_198"
-decoder_path = "/Users/morikawakaion/Desktop/nmt/models/transformer_decoder_20250709_085756_198"
+encoder_path = "/Users/morikawakaion/Desktop/nmt/models/transformer_encoder_20250710_132941_158"
+decoder_path = "/Users/morikawakaion/Desktop/nmt/models/transformer_decoder_20250710_132941_158"
 src_language = "English"
 
 src_seq_len = 55
 tgt_seq_len = 69
 translator_class = translator.Translator(encoder_path, decoder_path)
 hidden_size = 256
-encoder = nn_architectures.TransformerEncoder(9783, hidden_size, 55, num_layer=3, dropout_p=0.3)
-decoder = nn_architectures.TransformerDecoder(hidden_size, 15532, 69, num_layer=3, dropout_p=0.3)
+encoder = nn_architectures.TransformerEncoder(9783, hidden_size, 55, num_layer=3, dropout_p=0.3, relposenc=False, linear_hidden_ratio=8)
+decoder = nn_architectures.TransformerDecoder(hidden_size, 15532, 69, num_layer=3, dropout_p=0., relposenc=False, linear_hidden_ratio=8)
 
 encoder, decoder = translator_class.load_models(encoder, decoder)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

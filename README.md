@@ -4,8 +4,7 @@
 This is a PyTorch implementation of Neural Machine Translation for translating English text to French. For training, I used Bahdanau attention and Transformer, which are implemented from scratch in src/library/nn_architectures.py. 
 
 ## Dataset
-
-The dataset was taken from https://www.kaggle.com/datasets/devicharith/language-translation-englishfrench. and WMT 2014 English-French.
+The dataset was taken from https://www.kaggle.com/datasets/devicharith/language-translation-englishfrench. 
 
 ## Models
 ### 1. Bahdanau Attention
@@ -76,3 +75,25 @@ This will:
 - Save preprocessed tensors and vocabulary files
 
 ### 2. Training
+```
+python bahdanau_train.py
+```
+or 
+```
+python transformer_train.py
+```
+
+### 3. Translation
+Rewrite encoder_path, decoder_path and hyperparameters and run
+```
+python bahdanau_translate.py
+```
+or 
+```
+python translate.py
+```
+
+### Current Results:
+RNN: Read https://github.com/peuape/neural-machine-translation/blob/main/runs/validation/bahdanau_val.txt
+Transformer: Still in the works.
+
