@@ -371,8 +371,20 @@ class TransformerEncoder(nn.Module):
         return embedding,0
     
     def _init_weights(self):
-        # Initialize embeddings with smaller std
-        nn.init.normal_(self.embedding.weight, mean=0.0, std=self.hidden_size ** -0.5)
+        # Initialize embeddings with Xavier uniform
+        nn.init.xavier_uniform_(self.embedding.weight)
+        
+        # Initialize all linear layers with Xavier uniform
+        for layer in self.encoderlayers:
+            # Attention layers
+            nn.init.xavier_uniform_(layer.attention.Wq.weight)
+            nn.init.xavier_uniform_(layer.attention.Wk.weight)
+            nn.init.xavier_uniform_(layer.attention.Wv.weight)
+            nn.init.xavier_uniform_(layer.attention.Wo.weight)
+            
+            # Feedforward layers
+            nn.init.xavier_uniform_(layer.linear1.weight)
+            nn.init.xavier_uniform_(layer.linear2.weight)
     
 class TransformerDecoderLayer(nn.Module):
     """ 
@@ -504,11 +516,30 @@ class TransformerDecoder(nn.Module):
         return output, 0,0
     
     def _init_weights(self):
-        # Initialize embeddings with smaller std
-        nn.init.normal_(self.embedding.weight, mean=0.0, std=self.hidden_size ** -0.5)
+        # Initialize embeddings with Xavier uniform
+        nn.init.xavier_uniform_(self.embedding.weight)
+        
         # Initialize output projection
         nn.init.xavier_uniform_(self.output.weight)
         nn.init.constant_(self.output.bias, 0.0)
+        
+        # Initialize all linear layers in decoder layers with Xavier uniform
+        for layer in self.decoderlayers:
+            # Self-attention layers
+            nn.init.xavier_uniform_(layer.attention1.Wq.weight)
+            nn.init.xavier_uniform_(layer.attention1.Wk.weight)
+            nn.init.xavier_uniform_(layer.attention1.Wv.weight)
+            nn.init.xavier_uniform_(layer.attention1.Wo.weight)
+            
+            # Cross-attention layers
+            nn.init.xavier_uniform_(layer.attention2.Wq.weight)
+            nn.init.xavier_uniform_(layer.attention2.Wk.weight)
+            nn.init.xavier_uniform_(layer.attention2.Wv.weight)
+            nn.init.xavier_uniform_(layer.attention2.Wo.weight)
+            
+            # Feedforward layers
+            nn.init.xavier_uniform_(layer.linear1.weight)
+            nn.init.xavier_uniform_(layer.linear2.weight)
     
     def infer_greedy(self, encoder_input, encoder_output):
         """
