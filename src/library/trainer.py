@@ -144,13 +144,15 @@ class Trainer:
                 self.scaler.update()
             else:
                 encoder_outputs, encoder_hidden = self.encoder(src_idx)
-                decoder_outputs, _, _ = self.decoder(encoder_outputs, encoder_hidden, tgt_idx, src_idx)
+                
                 if self.transformer:
                     # For transformer: decoder predicts next token, so we compare outputs with shifted targets
                     # decoder_outputs[:, i] should predict tgt_idx[:, i+1]
                     target = tgt_idx[:, 1:]  # Remove <sos> token from targets
-                    decoder_outputs = decoder_outputs[:, :-1]  # Remove last prediction
+                    tgt_idx_truncated = tgt_idx[:, :-1]  # Remove last prediction for decoder input
+                    decoder_outputs, _, _ = self.decoder(encoder_outputs, encoder_hidden, tgt_idx_truncated, src_idx)
                 else:
+                    decoder_outputs, _, _ = self.decoder(encoder_outputs, encoder_hidden, tgt_idx, src_idx)
                     target = tgt_idx
                 loss = self.loss_fn(decoder_outputs.reshape(-1, decoder_outputs.size(-1)), target.reshape(-1))
                 loss.backward()
