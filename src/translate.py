@@ -15,11 +15,11 @@ decoder_path = "/Users/morikawakaion/Desktop/nmt/models/transformer_decoder_2025
 src_language = "English"
 
 src_seq_len = 55
-tgt_seq_len = 69
+tgt_seq_len = 68
 translator_class = translator.Translator(encoder_path, decoder_path)
 hidden_size = 256
-encoder = nn_architectures.TransformerEncoder(9783, hidden_size, 55, num_layer=3, dropout_p=0.3, relposenc=False, linear_hidden_ratio=8)
-decoder = nn_architectures.TransformerDecoder(hidden_size, 15532, 69, num_layer=3, dropout_p=0., relposenc=False, linear_hidden_ratio=8)
+encoder = nn_architectures.TransformerEncoder(9783, hidden_size, src_seq_len, num_layer=3, dropout_p=0.3, relposenc=False, linear_hidden_ratio=8)
+decoder = nn_architectures.TransformerDecoder(hidden_size, 15532, tgt_seq_len, num_layer=3, dropout_p=0., relposenc=False, linear_hidden_ratio=8)
 
 encoder, decoder = translator_class.load_models(encoder, decoder)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

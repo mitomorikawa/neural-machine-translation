@@ -36,7 +36,7 @@ def main():
     input_size = 9783
     output_size = 15532
     src_seq_len = 55  # Maximum source sequence length
-    tgt_seq_len = 69  # Maximum target sequence length
+    tgt_seq_len = 68  # Maximum target sequence length
 
     encoder = nn_architectures.TransformerEncoder(input_size, args.hidden_size, src_seq_len, 
                                                  num_layer=args.num_layers, dropout_p=args.dropout, relposenc=args.relposenc,
