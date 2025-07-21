@@ -67,8 +67,6 @@ class TensorLoader:
 
         return torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=True)
     
-    
-    
 class Trainer:
     """
     This class is responsible for training the model.

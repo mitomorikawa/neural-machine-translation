@@ -646,13 +646,3 @@ class TransformerDecoder(nn.Module):
         result[0, :len(best_sequence['tokens'])] = torch.tensor(best_sequence['tokens'], device=encoder_output.device)
         return result
         
-        
-
-        
-    
-
-
-            
-            
-
-    

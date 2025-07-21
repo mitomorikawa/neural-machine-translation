@@ -1,7 +1,7 @@
 # Neural Machine Translation (NMT) - English to French
 
 ## Overview
-This is a PyTorch implementation of Neural Machine Translation for translating English text to French. For training, I used Bahdanau attention and Transformer, which are implemented from scratch in src/library/nn_architectures.py. 
+This is a PyTorch implementation of Neural Machine Translation for translating English text to French. For training, I used Bahdanau attention and Transformer, which are implemented from scratch in src/library/nn_architectures.py. The Bahdanau model yields a decent BLEU score and translations, whereas the performance of the Transformer is poor and still in the works. 
 
 ## Dataset
 The dataset was taken from https://www.kaggle.com/datasets/devicharith/language-translation-englishfrench. 
@@ -26,25 +26,29 @@ Hyperparameters
 
 ```
 nmt/
-├── data/                  # Preprocessed data and vocabularies
-│   ├── eng_fra.csv       # Original English-French parallel corpus
-│   ├── eng_*.pt          # Preprocessed English tensors
-│   ├── fra_*.pt          # Preprocessed French tensors
-│   └── *_vocab.pkl       # Vocabulary mappings
-├── models/               # Saved model checkpoints
-├── runs/                 # TensorBoard logs
-├── src/                  # Source code
-│   ├── bahdanau_train.py # Main training script
-│   ├── preprocess.py     # Data preprocessing script
-│   ├── translate.py      # Interactive translation script
-│   ├── validate.py       # Model validation script
-│   └── library/          # Core modules
-│       ├── nn_architectures.py  # Neural network models
-│       ├── preprocessor.py      # Data preprocessing utilities
-│       ├── trainer.py           # Training logic
-│       ├── translator.py        # Translation utilities
-│       └── validator.py         # Validation utilities
-└── tests/                # Unit tests
+├── data/                         # Preprocessed data and vocabularies
+├── models/                       # Saved model checkpoints
+├── runs/                         # TensorBoard logs
+├── src/                          # Source code
+│   ├── bahdanau_train.py         # Bahdanau attention model training
+│   ├── bahdanau_translate.py     # Bahdanau model translation
+│   ├── transformer_train.py      # Transformer model training
+│   ├── transformer_translate.py  # Transformer model translation
+│   ├── preprocess.py             # Data preprocessing script
+│   ├── validate.py               # Model validation script
+│   └── library/                  # Core modules
+│       ├── nn_architectures.py   # Neural network models
+│       ├── preprocessor.py       # Data preprocessing utilities
+│       ├── trainer.py            # Training logic
+│       ├── translator.py         # Translation utilities
+│       └── validator.py          # Validation utilities
+└── tests/                        # Unit tests
+    ├── test_large.py             # Tests for large dataset
+    └── library/                  # Library module tests
+        ├── test_nn_architectures.py
+        ├── test_preprocessor.py
+        ├── test_trainer.py
+        └── test_translator.py
 
 ```
 
@@ -80,20 +84,20 @@ python bahdanau_train.py
 ```
 or 
 ```
-python transformer_train.py
+python transformer_train.py (This one needs fixing)
 ```
 
 ### 3. Translation
-Rewrite encoder_path, decoder_path and hyperparameters and run
+run
 ```
 python bahdanau_translate.py
 ```
 or 
 ```
-python translate.py
+python transformer_translate.py (Needs debugging)
 ```
 
 ### Current Results:
 RNN: Read https://github.com/peuape/neural-machine-translation/blob/main/runs/validation/bahdanau_val.txt
-Transformer: Still in the works.
+Transformer: Not finished yet.
 
