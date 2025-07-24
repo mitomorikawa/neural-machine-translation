@@ -1,7 +1,8 @@
 # Neural Machine Translation (NMT) - English to French
 
 ## Overview
-This is a PyTorch implementation of Neural Machine Translation for translating English text to French. For training, I used Bahdanau attention and Transformer, which are implemented from scratch in src/library/nn_architectures.py. The Bahdanau model yields a decent BLEU score and translations, whereas the performance of the Transformer is poor and still in the works. 
+This is a PyTorch implementation of Neural Machine Translation for translating English text to French. I used a seq2seq RNN model with Bahdanau attention, which yielded a decent Bleu score and translations. I also wanted to implement a Transformer translation model from scratch as well (the painstaking struggle of which is visible in the codes here and there), but whichever part I tweaked the translation quality never improved. After a tormenting month of struggle I realised that there are so many nuts and bolts I need to correctly implement in order to efficiently train a Transformer model without collapsing it, and that trying to implement them all is kind of beyond my capabili
+ty right now, considering my time constraint and current knowledge. So I decided to finish this after I've gained deeper understanding of transformer and these techniques, hopefully within a year before coming back to Japan.
 
 ## Dataset
 The dataset was taken from https://www.kaggle.com/datasets/devicharith/language-translation-englishfrench. 
@@ -18,8 +19,6 @@ Hyperparameters
 
 ### 2. Transformer
 
-Hyperparameters
-•
 
 
 ## Project Structure
@@ -64,7 +63,7 @@ nmt/
 
 ### 1. Data Preprocessing
 
-Preprocess the raw English-French parallel corpus:
+Place the csv file containing sentence pairs in data/ and run
 
 ```bash
 cd src
