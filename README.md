@@ -57,6 +57,8 @@ nmt/
 - TensorBoard
 - NumPy
 - Pickle
+- scikit-learn
+- tqdm
 
 ## Training
 
